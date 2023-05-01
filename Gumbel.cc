@@ -32,7 +32,7 @@ using namespace std;
 #define BOARD_SIZE 15
 #define RESET "\033[0m"
 #define RED  "\033[31m" 
-//g++ -march=native KataGo.cc -g -ltensorflow -fopenmp -O3 -o KataGo && "/home/azon/Documents/OOG/OOG-KataGo/"KataGo --self_play | tee output.log
+//g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --human_play
 ////////////////////////////////
 //#define DEBUG
 #define CHECK
