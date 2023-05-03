@@ -612,6 +612,19 @@ void Game::print(){
     }
 
 }
+vector<float> softmax(const std::vector<float>& input) {
+	auto MAX = *max_element(input.begin(), input.end());
+    std::vector<float> output(input.size());
+    float sum = 0.0;
+    for (size_t i = 0; i < input.size(); ++i) {
+        output[i] = std::exp(input[i] - MAX);
+        sum += output[i];
+    }
+    for (size_t i = 0; i < output.size(); ++i) {
+        output[i] /= sum;
+    }
+    return output;
+}
 
 float expand_node(Node* node, Game* game, cppflow::model& model){
     Network network_output = predict(node->my, node->opp, model);
@@ -619,18 +632,9 @@ float expand_node(Node* node, Game* game, cppflow::model& model){
     node->to_play = game->to_play();
     vector<uint64_t> legal_actions = game->legal_actions(node->my, node->opp, node->move, node->myTzone, node->oppTzone);
     float policy_sum = 0.0;
-    //vector<float> soft_max_policy = network_output.policies;
     
     //////////////////soft max///////////////////
-    vector<float> soft_max_policy(225, 0.0);
-    int MAX = *max_element(network_output.policies.begin(), network_output.policies.end());
-    for(int i = 0; i < 225; ++i){
-        soft_max_policy[i] = exp(network_output.policies[i] - MAX);
-        policy_sum += soft_max_policy[i];
-    }
-    for(int i = 0; i < 225; ++i){
-        soft_max_policy[i] = soft_max_policy[i] / policy_sum;
-    }
+    vector<float> soft_max_policy = softmax(network_output.policies);
     //////////////////////////////////////////
     
     vector<float> policies(225, 0.0);
@@ -1000,7 +1004,7 @@ void evaluation(cppflow::model& curr_model, cppflow::model& pre_model){
     cout << "New model win rate: " << (double(cur_win) / EVALUATION_PLAY_COUNT) * 100.0 << "%" << endl;
 }
 int main(int argc, char* argv[]){
-    ios_base::sync_with_stdio(0);
+    //ios_base::sync_with_stdio(0);
     srand(time(NULL));
     init();
     //vector<uint8_t> config{0x32,0xb,0x9,0x34,0x33,0x33,0x33,0x33,0x33,0xd3,0x3f,0x20,0x1};//30%
@@ -1022,7 +1026,8 @@ int main(int argc, char* argv[]){
         self_play(model);
     }
     else if(string(argv[1]) == "--evaluation"){
-        temp = 0.3;
+        temp = 0.4;
+        EVALUATION_COUNT = 500;
         cppflow::model p_model("./p_model");
         evaluation(model, p_model);
 
@@ -1033,8 +1038,9 @@ int main(int argc, char* argv[]){
     }
     else if(string(argv[1]) == "--human_play"){
         //dirichlet_noise = false;
-        EVALUATION_COUNT = 1000;
-        bolzman_noise = false;
+        EVALUATION_COUNT = 2500;
+        //bolzman_noise = false;
+        temp = 0.1;
         //cppflow::model p_model("./save_model/model200");
         cppflow::model p_model("./c_model");
         human_play(p_model);
