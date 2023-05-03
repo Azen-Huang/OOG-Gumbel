@@ -6,7 +6,7 @@ do
 
     if ((i % 10 == 0 ))
     then
-        g++ -march=native KataGo.cc -g -ltensorflow -fopenmp -O2 -o KataGo && "./"KataGo --evaluation $i | tee output_$((i))_vs_$((i - 25)).log
+        g++ -march=native KataGo.cc -g -ltensorflow -fopenmp -O2 -o KataGo && "./"KataGo --evaluation $i | tee output_$((i))_vs_$((i - 10)).log
         #g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --evaluation $i | tee output_$((i))_vs_$((i - 25)).log
         python -u "./copy_folder.py" -1
         python -u "./copy_folder.py" $i
