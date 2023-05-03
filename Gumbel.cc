@@ -34,10 +34,10 @@ using namespace std;
 #define RED  "\033[31m" 
 //g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --human_play
 ////////////////////////////////
-//#define DEBUG
+#define DEBUG
 #define CHECK
 bool bolzman_noise = true, dirichlet_noise = true;
-int EVALUATION_COUNT = 1000;
+int EVALUATION_COUNT = 200;
 int MAX_CONSIDERED_NUM = 16; //Top-k-Gumbel
 int REPLAY_BUFFER_SIZE = 1536;//2048
 int noise_limit_step = 7;
@@ -198,40 +198,42 @@ Network predict(BitBoard my, BitBoard opp, cppflow::model& model){
 
 class Node{
 public:
-    atomic<float> visit_count;
-    atomic<int> to_play;
-    atomic<float> prior;
-    atomic<float> reward;
-    atomic<float> raw_value;
-    atomic<int> level;
+    float visit_count;
+    int to_play;
+    float prior;
+    float reward;
+    float raw_value;
+    float complete_qvalue;
+    int level;
     BitBoard my, opp, move, myTzone, oppTzone;
     vector<Node*> children;
-    atomic<int> action;
-    atomic<float> g;
+    int action;
+    float g;
     //shared_mutex children_lock;
     Node(int _action, float _prior,int level, BitBoard _my, BitBoard _opp, BitBoard _move, BitBoard _myTzone, BitBoard _oppTzeon);
     bool expanded();
-    float value();
-    void PrintTree(uint64_t pos, string pre_output, bool isLast);
+    float qvalue();
+    void PrintTree(uint64_t pos, string pre_output, bool isLast, float limit);
 };
 
 Node::Node(int _action, float _prior, int _level, BitBoard _my, BitBoard _opp, BitBoard _move, BitBoard _myTzone, BitBoard _oppTzone): 
-action(_action), g(0),
+action(_action), 
+g(0), complete_qvalue(0.0), reward(0.0), raw_value(0.0), visit_count(0.0), to_play(-1),
 my(_my), opp(_opp), move(_move), myTzone(_myTzone), oppTzone(_oppTzone),
-visit_count(0.0), to_play(-1), prior(_prior), level(_level), reward(0.0), raw_value(0.0){}
+prior(_prior), level(_level){}
 
 bool Node::expanded(){
     return children.size() > 0;
 }
 
-float Node::value(){
+float Node::qvalue(){
     if(visit_count == 0.0){
         return 0.0;
     }
-    return (raw_value + reward) / (visit_count + 1);
+    return (-1 * raw_value + reward);
 }
 
-void Node::PrintTree(uint64_t pos, string pre_output, bool isLast){
+void Node::PrintTree(uint64_t pos = 0, string pre_output = "", bool isLast = true, float limit = 10){
     auto node = this;
     // Condition when node is None
     if (node == NULL)
@@ -241,7 +243,7 @@ void Node::PrintTree(uint64_t pos, string pre_output, bool isLast){
      int count = 2;
     if (isLast) {
         cout << "└── " << "action:" << Output(pos); 
-        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g;
+        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
         /*
         cout << ", child: [";
         for(auto& child: node->children){
@@ -256,7 +258,7 @@ void Node::PrintTree(uint64_t pos, string pre_output, bool isLast){
     }
     else {
         cout << "├── " << "action:" << Output(pos); 
-        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g;
+        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
         /*
         cout << ", child: [";
         for(auto& child: node->children){
@@ -273,8 +275,8 @@ void Node::PrintTree(uint64_t pos, string pre_output, bool isLast){
     int it = 0;
     int cnt = node->children.size();
     for(auto child: node->children){
-        if(child->visit_count >= 20.0 || child->level == 1){
-            child->PrintTree(child->action, pre_output+"   ", it == (cnt - 1));
+        if(child->visit_count >= limit || child->level == 1){
+            child->PrintTree(child->action, pre_output+"   ", it == (cnt - 1), limit);
             it++;
         }
     }
@@ -283,7 +285,7 @@ void Node::PrintTree(uint64_t pos, string pre_output, bool isLast){
 class Game{
 public:
     int history[225];
-    vector<vector<float>> child_visits;
+    vector<vector<float>> child_polices;
     vector<float> child_values;
     int num_actions;
     int SIZE;
@@ -443,7 +445,7 @@ void Game::store_search_statistics(Node* root){
         //katago
         float n_forced = sqrt(2.0 * child->prior * (float)root->visit_count);
         if((float)child->visit_count < n_forced) continue;
-        max_q_value = max(max_q_value, child->value());
+        max_q_value = max(max_q_value, child->qvalue());
         sum_visits += child->visit_count;
     }
     vector<float> child_visit(225, 0.0);
@@ -460,7 +462,7 @@ void Game::store_search_statistics(Node* root){
     //cout << "should be 1. :" << accumulate(child_visit.begin(), child_visit.end(), 0.0) << endl;
     //cout << "prunning: " << n << endl;
     child_values.push_back(-1 * max_q_value);
-    child_visits.push_back(child_visit);
+    child_polices.push_back(child_visit);
     return;
 }
 
@@ -542,7 +544,7 @@ vector<vector<int>> Game::make_image(int state_index){
 }
 
 pair<float,vector<float>> Game::make_target(int state_index){
-    return {terminal_value(state_index), child_visits[state_index]};
+    return {terminal_value(state_index), child_polices[state_index]};
 }
 
 int Game::to_play(){
@@ -634,37 +636,36 @@ vector<float> softmax(const std::vector<float>& input) {
 
 float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
     Network network_output = predict(node->my, node->opp, model);
-    node->raw_value = network_output.value;
     node->to_play = game->to_play();
     vector<uint64_t> legal_actions = game->legal_actions(node->my, node->opp, node->move, node->myTzone, node->oppTzone);
     float policy_sum = 0.0;
     //vector<float> soft_max_policy = network_output.policies;
     
     //////////////////soft max///////////////////
-    vector<float> soft_max_policy = softmax(network_output.policies);
+    // vector<float> soft_max_policy = softmax(network_output.policies);
     #ifdef CHECK
-    assert (reduce(soft_max_policy.begin(), soft_max_policy.end(), 0.0) != 1.0);
+    //cout << "expand soft max sum = " << reduce(soft_max_policy.begin(), soft_max_policy.end(), 0.0) << endl;
+    //assert(reduce(soft_max_policy.begin(), soft_max_policy.end(), 0.0) != 1.0);
     #endif
     //////////////////////////////////////////
-    
-    vector<float> policies(225, 0.0);
-    policy_sum = 0.0;
+    float max_logit = *max_element(network_output.policies.begin(), network_output.policies.end());
+    float min_logit = -std::numeric_limits<float>::max();
+    vector<float> policies(225, min_logit);
     for(auto& pos: legal_actions){
-        uint64_t legal_move = bitboard_pos_to_common_pos[pos];
-        policies[legal_move] = soft_max_policy[legal_move];
-        policy_sum += policies[legal_move];
+         uint64_t legal_move = bitboard_pos_to_common_pos[pos];
+         policies[legal_move] = network_output.policies[legal_move] - max_logit;
     }
-    if(policy_sum > 0){
-        for(auto& p:policies){
-            p /= policy_sum;
-        }
-    }
-    else{
-        cout << "policy have some problem." << endl;
-        if(legal_actions.size() > 2)
-            cout << "WTF" << endl;
-        policies = soft_max_policy;
-    }
+    // if(policy_sum > 0){
+    //     for(auto& p:policies){
+    //         p /= policy_sum;
+    //     }
+    // }
+    // else{
+    //     cout << "policy have some problem." << endl;
+    //     if(legal_actions.size() > 2)
+    //         cout << "WTF" << endl;
+    //     policies = soft_max_policy;
+    // }
     BitBoard new_my, new_moves, newTzone;
     uint64_t pos, feat, s_h, s_b, s_v, s_s;
     int idx = 0;
@@ -689,16 +690,79 @@ float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
     return network_output.value;
 }
 
-float qtransform(Node* parent, Node* child){
+vector<float>  complete_qvalues(const vector<float>& visited_counts, const vector<float>& q_values,const float& value) {
+    int n = visited_counts.size();
+    vector<float> completed_qvalues(n);
+    for (int i = 0; i < n; ++i) {
+        completed_qvalues[i] = (visited_counts[i] == 0) ? value : q_values[i];
+    }
+    return completed_qvalues;
+}
+
+vector<float> rescale_qvalues(const vector<float>& qvalues, float epsilon, float visit_scale, float value_scale) {
+    std::vector<float> rescaled_qvalues(qvalues.size());
+    auto min_value = *min_element(qvalues.begin(), qvalues.end());
+    auto max_value = *max_element(qvalues.begin(), qvalues.end());
+    for (size_t i = 0; i < qvalues.size(); ++i) {
+        // 將q_value的值取在[0, 1]這個區間
+        rescaled_qvalues[i] = (qvalues[i] - min_value) / max(max_value - min_value, epsilon);
+        // 論文 σ(qˆ(a)) = (maxvisit_init + max(visit_counts)) * value_scale * qvalues
+        rescaled_qvalues[i] = rescaled_qvalues[i] * visit_scale * value_scale;
+    }
+
+    return rescaled_qvalues;
+}
+
+vector<float>  qtransform(Node* node, bool use_mixed_value = false){
+    int n = node->children.size();
+    float value_scale = 0.1;
+    float maxvisit_init = 50.0;
+    float epsilon = 1e-8;
     
+    float raw_value = -1.0 * node->raw_value;
+    vector<float> qvalues(n);
+    vector<float> visited_counts(n); // children visited count
+    vector<float> prior_probs(n); // children prior
+
+    float maxvisit = 0.0;
+    for (int i = 0; i < n; ++i) {
+        qvalues[i] = node->children[i]->qvalue();
+        visited_counts[i] = node->children[i]->visit_count;
+        if (visited_counts[i] != 0 && qvalues[i] == 0) {
+            node->PrintTree();
+            cout << node->children[i]->reward << endl;
+            cout << node->children[i]->raw_value << endl;
+            cout << node->children[i]->children.size() << endl;
+            assert(false);
+        }
+        maxvisit = max(maxvisit, visited_counts[i]);
+        prior_probs[i] = node->children[i]->prior;
+    }
+    prior_probs = softmax(prior_probs);
+    
+    float value;
+    if (use_mixed_value) {
+        //todo
+        //value = compute_mixed_value(raw_value, qvalues, visit_counts, prior_probs);
+    }
+    else {
+        value = raw_value;
+    }
+    vector<float> completed_qvalues = complete_qvalues(visited_counts, qvalues, value);
+
+    float visit_scale = maxvisit_init + maxvisit;
+
+    completed_qvalues = rescale_qvalues(completed_qvalues, epsilon, visit_scale, value_scale);
+    
+    return completed_qvalues;
 }
 
 Node* select_child(Node* node, uint64_t& action){
-    int n = node->chlidren.size();
+    int n = node->children.size();
     vector<float> visited_counts(n);
     vector<float> completed_qvalues = qtransform(node);
     #ifdef CHECK
-    assert(n != completed_qvalues);
+    assert(n == completed_qvalues.size());
     #endif
     vector<float> probs(n);
     for (int i = 0; i < n; ++i) {
@@ -707,21 +771,22 @@ Node* select_child(Node* node, uint64_t& action){
     }
     probs = softmax(probs);
     #ifdef CHECK
-    assert(node->visit_count != reduce(visited_counts.begin(), visited_counts.end(), 0));
+    //cout << "expand select_child child visited count sum = " << (visited_counts.begin(), visited_counts.end(), 0) << ", parent visited count" << node->visit_count << endl;
+    //assert(node->visit_count == reduce(visited_counts.begin(), visited_counts.end(), 0));
     #endif
 
     int best_action_idx = 0;
     float max_prob = 0.0;
     for (int i = 0; i < n; ++i) {
-        probs[i] = (probs[i] - visited_counts[i]) / (1 + node->visit_count);
+        probs[i] = probs[i] - visited_counts[i] / (1 + node->visit_count);
         if (probs[i] > max_prob) {
             max_prob = probs[i];
             best_action_idx = i;
         }
     }
 
-    action = node->children[i]->action;
-    return node->children[i];
+    action = node->children[best_action_idx]->action;
+    return node->children[best_action_idx];
 }
 
 void backpropagate(vector<Node*> search_path, float value){ // ok
@@ -729,7 +794,7 @@ void backpropagate(vector<Node*> search_path, float value){ // ok
     int to_play = search_path[search_path.size() - 1]->to_play;
     for(auto& node: search_path){
         node->reward = node->reward + (node->to_play == to_play ? (-1.0 * value) : (value));//???? 為什麼是 1 - value 不是 - value
-        node->visit_count = node->visit_count + 1;
+        node->visit_count = node->visit_count + 1.0;
     }
 }
 
@@ -743,43 +808,61 @@ vector<float> GenerateGumbelNoise(int shape) { //ok
         float u = distribution(gen);
         gumbel_noise[i] = -log(-log(u + 1e-20) + 1e-20);
     }
+
+    gumbel_noise = softmax(gumbel_noise);
     return gumbel_noise;
 }
 
-void add_Gumbel_noise(vector<Node*> children) { //ok
+void add_Gumbel_noise(vector<Node*>& children) { //ok
     int shape = children.size();
     vector<float> gumbel_noise = GenerateGumbelNoise(shape);
     for (int i = 0; i < shape; ++i) {
         children[i]->g = gumbel_noise[i];
-        children[i]->reward = children[i]->g + children[i]->prior;
     }
     return;
 }
 
-Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action, vector<BitBoard> board_info){
-    int max_num_considered_actions = MAX_CONSIDERED_NUM;
-    int num_simulations = EVALUATION_COUNT;
+Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,const vector<BitBoard>& board_info){
+    int max_num_considered_actions = MAX_CONSIDERED_NUM; //16
+    int num_simulations = EVALUATION_COUNT; //200
 
     Node* root = new Node(-1, 0.0, 0, board_info[0], board_info[1], board_info[2], board_info[3], board_info[4]);
 
-	expand_node(root, game, model);
-
+	root->raw_value = expand_node(root, game, model);
+    
 	add_Gumbel_noise(root->children); //添加Gumbel noise
 
 	int num_valid_actions = root->children.size();
-	int max_num_considered_actions = min(num_valid_actions, max_num_considered_actions);
-
+	max_num_considered_actions = min(num_valid_actions, max_num_considered_actions);
+    int sum = 0;
 	int log2max = int(ceil(log2(max_num_considered_actions)));
-	for (int num_considered = max_num_considered_actions; num_considered >= 1; num_considered /= 2) {
-		sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return a->reward > b->reward;}); // 根據q value進行排序
-		int num_extra_visits = max(1, int(num_simulations / (log2max * num_considered)));
-
+	for (int num_considered = max_num_considered_actions; num_considered > 1; num_considered = num_considered == 3 ? num_considered - 1 : num_considered / 2) {
+        num_considered = max(2, num_considered);
+		vector<float> completed_qvalues = qtransform(root);
+        for (int i = 0; i < root->children.size(); ++i) {
+            root->children[i]->complete_qvalue = completed_qvalues[i];
+        }
+        //g先不要
+        //sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->prior + a->complete_qvalue) > (b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
+        sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序  
+        //sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)}); // 根據q value進行排序      
+        
+        int num_extra_visits = num_considered == 2 ? max(1, (num_simulations - sum) / 2) : max(1, int(num_simulations / (log2max * num_considered)));
 		for (int i = 0; i < num_considered; ++i) { //展開root->children[0 : num_considered]
+            sum += num_extra_visits;
 			Node* child = root->children[i]; //目前要模擬的雞欸但
             Game* child_game = game->clone();
             child_game->apply(child->action);
-            expand_node(child, child_game, model);
-			for (int i = 0; i <= num_extra_visits; ++k) {
+            if (!child->expanded()) { //如果child沒被展開過，就展開它
+                child->raw_value = expand_node(child, child_game, model);
+                vector<Node*> root_child_path;
+                root_child_path.push_back(root);
+                root_child_path.push_back(child);
+                backpropagate(root_child_path, child->raw_value);
+            }
+
+            uint64_t action;
+			for (int i = 1; i <= num_extra_visits; ++i) {
 				//展開num_extra_visits次root的child 算他們的q_value
 				//***************************************************
 				Node* node = child;
@@ -793,22 +876,27 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action, 
 		            scratch_game->apply(action);
 		            search_path.push_back(node);
 		        } 
-		        float value;
+
 		        if(scratch_game->terminal(node->opp, node->my, action)){
-		            value = -1;
+                    node->raw_value = -1;
 		            node->to_play = scratch_game->to_play();
 		        }
 		        else{
-		            value = expand_node(node, scratch_game, model);
+		            node->raw_value = expand_node(node, scratch_game, model);
 		        }
 
-		        backpropagate(search_path, value);
+		        backpropagate(search_path, node->raw_value);
 		        //***************************************************
             }
 		}
 	}
-
-	selected_action = root->children[0]->action;
+    vector<float> completed_qvalues = qtransform(root);
+    for (int i = 0; i < root->children.size(); ++i) {
+        root->children[i]->complete_qvalue = completed_qvalues[i];
+    }
+    //sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->prior + a->complete_qvalue) > (b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
+	sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
+    selected_action = root->children[0]->action;
 	return root;
 }
 
@@ -860,7 +948,7 @@ void self_play(cppflow::model& model){
             }
             board_history.push_back(board_info);        
 
-            policies_history.push_back(game->child_visits[i]);
+            policies_history.push_back(game->child_polices[i]);
             
             float value = i % 2 == winner ? -1.0 : 1.0;//！!！!
             
@@ -877,7 +965,7 @@ void self_play(cppflow::model& model){
                 auxiliary_policies_history.push_back(last_auxiliary_policy);
             }
             else{
-                auxiliary_policies_history.push_back(game->child_visits[i + 1]);
+                auxiliary_policies_history.push_back(game->child_polices[i + 1]);
             }    
         }
         round++;
@@ -918,6 +1006,10 @@ void human_play(cppflow::model& model){
         int n;
         if(c == '\n'){
             Node* root = seq_halving(game, model, action, board_info);
+            #ifdef DEBUG
+                sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
+                root->PrintTree(0, "", true);
+            #endif
             game->store_search_statistics(root);
             //delete root;
             game->apply(action);
@@ -937,6 +1029,9 @@ void human_play(cppflow::model& model){
             }
             else{
                 Node* root = seq_halving(game, model, action, board_info);
+                #ifdef DEBUG
+                    root->PrintTree(0, "", true, 20);
+                #endif
                 game->store_search_statistics(root);
                 //delete root;
                 game->apply(action);
@@ -1029,11 +1124,11 @@ int main(int argc, char* argv[]){
         
     }
     else if(string(argv[1]) == "--human_play"){
-        //dirichlet_noise = false;
-        EVALUATION_COUNT = 1000;
+        dirichlet_noise = false;
+        EVALUATION_COUNT = 500;
         bolzman_noise = false;
-        //cppflow::model p_model("./save_model/model200");
-        cppflow::model p_model("./c_model");
+        cppflow::model p_model("./model100");
+        //cppflow::model p_model("./c_model");
         human_play(p_model);
     }
     

@@ -355,6 +355,7 @@ def save_init_mode():
     del KataGo_model
 
 if __name__ == '__main__':
+    print("Tensorflow version:", tf.__version__)
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         try:
@@ -370,8 +371,8 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    #save_init_mode()
-    train_network()
+    save_init_mode()
+    #train_network()
     '''
     del_hitory()
     for i in range(19):
