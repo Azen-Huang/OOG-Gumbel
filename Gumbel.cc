@@ -36,8 +36,8 @@ using namespace std;
 ////////////////////////////////
 //#define DEBUG
 //#define CHECK
-bool GUMBEL_NOISE = true;
-int EVALUATION_COUNT = 10;
+float GUMBEL_PENALTY = 1.0;
+int EVALUATION_COUNT = 16; // expand node count
 int MAX_CONSIDERED_NUM = 16; //Top-k-Gumbel
 int REPLAY_BUFFER_SIZE = 1536;//2048
 int noise_limit_step = 7;
@@ -831,7 +831,7 @@ void add_Gumbel_noise(vector<Node*>& children) { //ok
     int shape = children.size();
     vector<float> gumbel_noise = GenerateGumbelNoise(shape);
     for (int i = 0; i < shape; ++i) {
-        children[i]->g = gumbel_noise[i];
+        children[i]->g = gumbel_noise[i] * GUMBEL_PENALTY;
     }
     return;
 }
@@ -844,16 +844,19 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
 
 	root->raw_value = expand_node(root, game, model);
     
-    if (GUMBEL_NOISE) {
-	    add_Gumbel_noise(root->children); //添加Gumbel noise
-    }
+	add_Gumbel_noise(root->children); //添加Gumbel noise
+    
 	int num_valid_actions = root->children.size();
+    num_valid_actions = min(num_valid_actions, num_simulations); //ok
 	max_num_considered_actions = min(num_valid_actions, max_num_considered_actions);
-    int sum = 0;
 	int log2max = int(ceil(log2(max_num_considered_actions)));
+    // cout << log2max << endl << endl; // check simulation count
     max_num_considered_actions = num_valid_actions == 1 ? 2 : max_num_considered_actions;
+    int num_extra_visits = 0;
+    int sum = 0;
 	for (int num_considered = max_num_considered_actions; num_considered > 1; num_considered = num_considered == 3 ? num_considered - 1 : num_considered / 2) {
         num_considered = max(2, num_considered);
+        // cout << "expand " << num_considered << " actions" << endl; // check simulation count
 		vector<float> completed_qvalues = qtransform(root);
         for (int i = 0; i < root->children.size(); ++i) {
             root->children[i]->complete_qvalue = completed_qvalues[i];
@@ -864,16 +867,20 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
         //sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)}); // 根據q value進行排序      
         
         int num_extra_visits = num_considered == 2 ? max(1, (num_simulations - sum) / 2) : max(1, int(num_simulations / (log2max * num_considered)));
+        // cout << "each expand node need simulate " << num_extra_visits << " times" << endl; // check simulation count
+        
         if (num_valid_actions == 1) {
             num_extra_visits = num_simulations - 1;
             num_considered = 1;
         }
+        int count = 0;
         for (int i = 0; i < num_considered; ++i) { //展開root->children[0 : num_considered]
-            sum += num_extra_visits;
 			Node* child = root->children[i]; //目前要模擬的雞欸但
             Game* child_game = game->clone();
             child_game->apply(child->action);
+            int simulation_count = 0;
             if (!child->expanded()) { //如果child沒被展開過，就展開它
+                simulation_count++;
                 child->raw_value = expand_node(child, child_game, model);
                 vector<Node*> root_child_path;
                 root_child_path.push_back(root);
@@ -882,7 +889,8 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
             }
 
             uint64_t action;
-			for (int i = 1; i <= num_extra_visits; ++i) {
+			while ((simulation_count++) < num_extra_visits) {
+                //cout << "child " << i << " expand count: " << j << endl;
 				//展開num_extra_visits次root的child 算他們的q_value
 				//***************************************************
 				Node* node = child;
@@ -908,8 +916,18 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
 		        backpropagate(search_path, node->raw_value);
 		        //***************************************************
             }
+            count += num_extra_visits; 
+            if (sum + count >= num_simulations) {
+                break;
+            }
 		}
+        //cout << " total visited " << count << endl; // check simulation count
+        sum += count;
+        if (sum >= num_simulations) {
+            break;
+        }
 	}
+    // cout << "Total count of expand node : " << sum << endl; //check simulation count
     vector<float> completed_qvalues = qtransform(root);
     for (int i = 0; i < root->children.size(); ++i) {
         root->children[i]->complete_qvalue = completed_qvalues[i];
@@ -1027,9 +1045,10 @@ void human_play(cppflow::model& model){
         if(c == '\n'){
             Node* root = seq_halving(game, model, action, board_info);
             #ifdef DEBUG
-                sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
-                root->PrintTree(0, "", true);
+                
             #endif
+            sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
+            root->PrintTree(0, "", true);
             game->store_search_statistics(root);
             //delete root;
             game->apply(action);
@@ -1134,8 +1153,8 @@ int main(int argc, char* argv[]){
         self_play(model);
     }
     else if(string(argv[1]) == "--evaluation"){
-        GUMBEL_NOISE = false;
-        EVALUATION_COUNT = 500;
+        GUMBEL_PENALTY = 0.1;
+        EVALUATION_COUNT = 200;
         cppflow::model p_model("./p_model");
         evaluation(model, p_model);
 
@@ -1145,7 +1164,8 @@ int main(int argc, char* argv[]){
         
     }
     else if(string(argv[1]) == "--human_play"){
-        EVALUATION_COUNT = 10;
+        GUMBEL_PENALTY = 0.1;
+        EVALUATION_COUNT = 200;
         //cppflow::model p_model("./model100");
         cppflow::model p_model("./c_model");
         human_play(p_model);

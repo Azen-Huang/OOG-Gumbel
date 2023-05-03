@@ -925,8 +925,10 @@ void human_play(cppflow::model& model){
         int n;
         if(c == '\n'){
             Node* root = run_mcts(game, model, action, board_info);
+            
             game->store_search_statistics(root);
             //delete root;
+            root->PrintTree(0, "", true)
             game->apply(action);
             game->print();//human play
             cout << "action: " << Output(action) << endl;
@@ -1028,11 +1030,12 @@ int main(int argc, char* argv[]){
     else if(string(argv[1]) == "--evaluation"){
         temp = 0.4;
         EVALUATION_COUNT = 500;
+        
         cppflow::model p_model("./p_model");
         evaluation(model, p_model);
 
-        // cppflow::model p_model("./save_model/model25");
-        // cppflow::model c_model("./save_model/model50");
+        // cppflow::model p_model("./save_model/model1");
+        // cppflow::model c_model("./save_model/model25");
         // evaluation(c_model, p_model);
         
     }
