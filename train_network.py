@@ -3,7 +3,8 @@
 from dn5 import DN
 import tensorflow as tf
 from tensorflow.keras.callbacks import LearningRateScheduler, LambdaCallback
-from tensorflow.keras.losses import CategoricalCrossentropy, MeanSquaredError
+#from tensorflow.keras.losses import CategoricalCrossentropy, MeanSquaredError
+from tensorflow.keras.losses import KLDivergence, MeanSquaredError
 from tensorflow.keras.models import load_model
 from tensorflow.keras.regularizers import L2
 from tensorflow.keras.optimizers import Adam
@@ -201,11 +202,11 @@ def expand_value_rotated_data(value):
 def MeanSquaredError_15(y_true, y_pred):
     return 1.5*MeanSquaredError()(y_true, y_pred)
 
-def CategoricalCrossentropy_015(y_true, y_pred):
-    return 0.15*CategoricalCrossentropy()(y_true, Softmax()(y_pred))
+def KLDivergence_015(y_true, y_pred):
+    return 0.15*KLDivergence()(Softmax()(y_true), Softmax()(y_pred))
 
-def Soft_max_Crossentropy(y_true, y_pred):
-    return CategoricalCrossentropy()(y_true, Softmax()(y_pred))
+def Soft_max_KLDivergence(y_true, y_pred):
+    return KLDivergence()(Softmax()(y_true), Softmax()(y_pred))
 
 def drawlearning(history):
     import matplotlib.pyplot as plt
@@ -301,7 +302,7 @@ def train_network():
         exit()
     
     opt = Adam(learning_rate=1e-3)
-    model.compile(loss=[Soft_max_Crossentropy, CategoricalCrossentropy_015, MeanSquaredError_15],optimizer='adam')
+    model.compile(loss=[Soft_max_KLDivergence, KLDivergence_015, MeanSquaredError_15],optimizer='adam')
     #model.compile(loss=['categorical_crossentropy',CategoricalCrossentropy_015,'mse'],optimizer=opt)
     model.build(input_shape = (None,15,15,2))
 
@@ -339,7 +340,7 @@ def train_network():
 
 def save_init_mode():
     KataGo_model = DN()#.model()
-    KataGo_model.compile(loss=[Soft_max_Crossentropy,CategoricalCrossentropy_015,MeanSquaredError_15],optimizer='adam')
+    KataGo_model.compile(loss=[Soft_max_KLDivergence,KLDivergence_015,MeanSquaredError_15],optimizer='adam')
     KataGo_model.build(input_shape = (None,15,15,2))
     print(KataGo_model.summary())
     
@@ -355,7 +356,6 @@ def save_init_mode():
     del KataGo_model
 
 if __name__ == '__main__':
-    print("Tensorflow version:", tf.__version__)
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         try:
@@ -371,8 +371,8 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    save_init_mode()
-    #train_network()
+    #save_init_mode()
+    train_network()
     '''
     del_hitory()
     for i in range(19):
