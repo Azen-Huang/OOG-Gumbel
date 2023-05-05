@@ -128,17 +128,17 @@ class Valuehead(Layer):
 
     def __init__(self, C_head, C_value):
         super(Valuehead, self).__init__()
-        self.conv = Conv2D(C_head, kernel_size=1, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv2 = Conv2D(C_head, kernel_size=1, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.relu2 = Activation('relu')
         self.averagepool = GlobalAveragePooling2D()
         self.maximumpool = GlobalMaxPooling2D()
         self.fully_connect1 = Dense(C_value, kernel_regularizer=(L2(0.0005)), activation='relu', name='v')
         self.fully_connect2 = Dense(1, kernel_regularizer=(L2(0.0005)), activation='tanh', name='v')
 
     def call(self, input_tensor, training=False):
-        x = self.conv(input_tensor)
-        x1 = self.averagepool(x)
-        x2 = self.maximumpool(x)
-        x = Concatenate()([x1, x2])
+        x = self.conv2(input_tensor)
+        x = self.relu2(x)
+        x = self.averagepool(x)
         x = self.fully_connect1(x)
         x = self.fully_connect2(x)
         return x

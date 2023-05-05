@@ -15,7 +15,7 @@ import numpy as np
 import pickle
 import os
 import time
-RN_EPOCHS = 20 #訓練次數
+RN_EPOCHS = 10 #訓練次數
 '''
 step 1:load data(history)
 
@@ -269,7 +269,7 @@ def train_network():
         auxiliary_policies += load_data(dir + '/auxiliary_policies',i)
         value += load_data(dir + '/value',i)[0]
     
-
+    
     # #step 2:重塑訓練資料的shape
     xs = np.array(boards).reshape(len(boards), 2, 15, 15)
     y_policies = np.array(policies).reshape(len(policies), 15, 15)
@@ -277,6 +277,7 @@ def train_network():
     y_values = np.array(value)
 
     print(xs.shape, y_policies.shape, y_next_policies.shape, y_values.shape)
+    start_time = time.time()
     print("start expand data.")
     xs = expand_xs_rotated_data(xs)
     xs = xs.transpose(0,2,3,1).astype('float32')
@@ -290,6 +291,8 @@ def train_network():
     y_values = expand_value_rotated_data(y_values).astype('float32')
     print(xs.shape, y_policies.shape, y_next_policies.shape, y_values.shape)
     print("expand data complete.")
+    end_time = time.time()
+    print("Expand data time taken: ", end_time - start_time)
     #step 3 載入最佳玩家的模型
     #model = DN().model()
     model = DN()
@@ -314,7 +317,7 @@ def train_network():
             if epoch >= 15: x = 0.00005
             return x
     '''
-    #'''
+    '''
     def step_decay(epoch):
             x = 0.0001
             if epoch >= 4: x = 0.00008
@@ -322,7 +325,14 @@ def train_network():
             if epoch >= 12: x = 0.00005
             if epoch >= 16: x = 0.00004
             return x
-    #'''
+    '''
+
+    def step_decay(epoch):
+            x = 0.0001
+            if epoch >= 4: x = 0.00008
+            if epoch >= 8: x = 0.00006
+            return x
+        
     lr_decay = LearningRateScheduler(step_decay)
 
     print_callback = LambdaCallback(
@@ -340,15 +350,16 @@ def train_network():
 
 def save_init_mode():
     KataGo_model = DN()#.model()
-    KataGo_model.compile(loss=[Soft_max_KLDivergence,KLDivergence_015,MeanSquaredError_15],optimizer='adam')
+
+    #KataGo_model.compile(loss=[Soft_max_KLDivergence,KLDivergence_015,MeanSquaredError_15],optimizer='adam')
     KataGo_model.build(input_shape = (None,15,15,2))
     print(KataGo_model.summary())
     
     x = np.array([0]*(2*15*15)).astype('float32')
     x = x.reshape(1,2,15,15).transpose(0,2,3,1).astype('float32')
-    #x = x.reshape(c,a,b).transpose(1,2,0).reshape(1,a,b,c)
-    #利用模型的預測去取得'策略'與'局勢價值'
+    # #利用模型的預測去取得'策略'與'局勢價值'
     y = KataGo_model.predict(x,batch_size=1)
+
     KataGo_model.save('./c_model/', save_format = 'tf')
     KataGo_model.save_weights('./c_model/', save_format = 'tf')
     #KataGo_model.save_weights('./c_model/latest.h5')
