@@ -1,7 +1,7 @@
-for ((i = 1; i <= 500; i = i + 1))
+for ((i = 95; i <= 200; i = i + 1))
 do
     echo "iter : $i Start"
-    g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --self_play $((i))
+    g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --self_play $((i))    
     python -u "./train_network.py"
 
     if ((i % 10 == 0 ))
@@ -12,12 +12,12 @@ do
         python -u "./copy_folder.py" $i
     fi
 
-    if((i >= 4 && i <= 15 && i % 2 == 0))
+    if((i >= (4) && i <= (35) && i % 2 == 0))
     then
         python -u "./del_history.py"
     fi
 
-    if((i > 15))
+    if((i > (35))) #6 file 4 file => 3 + 40
     then 
         python -u "./del_history.py"
     fi

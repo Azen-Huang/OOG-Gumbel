@@ -1,0 +1,535 @@
+load model accept
+1 iter start.
+Process  1 start.
+REPLAY_BUFFER_SIZE: 2048
+Gumble simple: 50
+Start Self Play
+├── action:@15, level:0, to_play:0, n:1000, qvalue:-0.110606, policy:0, g:0, raw value:0.0168651, completed qvalue:0
+   ├── action:F14, level:1, to_play:1, n:327, qvalue:0.176024, policy:-2.95282, g:0.390623, raw value:0.151754, completed qvalue:37.7
+   ├── action:D14, level:1, to_play:1, n:327, qvalue:0.0688982, policy:-2.80244, g:0.781518, raw value:0.0474693, completed qvalue:13.909
+   ├── action:H14, level:1, to_play:1, n:158, qvalue:0.0965381, policy:-2.13932, g:0.597348, raw value:0.171222, completed qvalue:20.0474
+   ├── action:E14, level:1, to_play:1, n:47, qvalue:0.114413, policy:-1.8879, g:0.33254, raw value:0.133548, completed qvalue:24.017
+   ├── action:C14, level:1, to_play:1, n:47, qvalue:0.10312, policy:-3.01667, g:0.0178323, raw value:-0.0124362, completed qvalue:21.5091
+   ├── action:G14, level:1, to_play:1, n:47, qvalue:0.100941, policy:-3.30308, g:0.583636, raw value:0.158022, completed qvalue:21.0253
+   └── action:B14, level:1, to_play:1, n:47, qvalue:0.00626845, policy:-1.88187, g:-0.000115817, raw value:0.0550013, completed qvalue:0
+   A B C D E F G H I J K L M N O 
+   ------------------------------
+15|- - - - - - - - - - - - - - - 
+14|- - - - - [31mo [0m- - - - - - - - - 
+13|- - - - - - - - - - - - - - - 
+12|- - - - - - - - - - - - - - - 
+11|- - - - - - - - - - - - - - - 
+10|- - - - - - - - - - - - - - - 
+ 9|- - - - - - - - - - - - - - - 
+ 8|- - - - - - - - - - - - - - - 
+ 7|- - - - - - - - - - - - - - - 
+ 6|- - - - - - - - - - - - - - - 
+ 5|- - - - - - - - - - - - - - - 
+ 4|- - - - - - - - - - - - - - - 
+ 3|- - - - - - - - - - - - - - - 
+ 2|- - - - - - - - - - - - - - - 
+ 1|- - - - - - - - - - - - - - - 
+action: F14
+value: 0.176024
+policy: 
+network value: 0.0168651
+predict win rate: 58.8012%
+
+Cost time: 4.27427
+├── action:@15, level:0, to_play:1, n:1000, qvalue:0.132053, policy:0, g:0, raw value:0.151754, completed qvalue:0
+   ├── action:E14, level:1, to_play:0, n:240, qvalue:-0.102283, policy:-2.29032, g:0.408844, raw value:-0.183756, completed qvalue:24.1593
+   ├── action:G12, level:1, to_play:0, n:240, qvalue:-0.121766, policy:-6.82387, g:0.896072, raw value:-0.105151, completed qvalue:22.1053
+   ├── action:I12, level:1, to_play:0, n:108, qvalue:-0.137765, policy:-6.7216, g:0.749704, raw value:0.120225, completed qvalue:20.4187
+   ├── action:G14, level:1, to_play:0, n:108, qvalue:-0.192824, policy:-3.0107, g:0.710722, raw value:-0.0147953, completed qvalue:14.6144
+   ├── action:H11, level:1, to_play:0, n:46, qvalue:-0.0563652, policy:-6.34607, g:0.780329, raw value:-0.24022, completed qvalue:29
+   ├── action:G11, level:1, to_play:0, n:46, qvalue:-0.0574338, policy:-6.56288, g:0.616183, raw value:0.258923, completed qvalue:28.8873
+   ├── action:H10, level:1, to_play:0, n:46, qvalue:-0.0686177, policy:-6.7046, g:0.946768, raw value:-0.0832015, completed qvalue:27.7083
+   ├── action:H14, level:1, to_play:0, n:46, qvalue:-0.233569, policy:-2.18757, g:0.467404, raw value:-0.216943, completed qvalue:10.319
+   ├── action:B10, level:1, to_play:0, n:15, qvalue:-0.104161, policy:-6.75236, g:0.924941, raw value:-0.104825, completed qvalue:23.9613
+   ├── action:J11, level:1, to_play:0, n:15, qvalue:-0.127689, policy:-6.84732, g:0.921483, raw value:-0.28667, completed qvalue:21.4809
+   ├── action:E11, level:1, to_play:0, n:15, qvalue:-0.133909, policy:-6.73349, g:0.829367, raw value:-0.145569, completed qvalue:20.8252
+   ├── action:I3, level:1, to_play:0, n:15, qvalue:-0.152892, policy:-7.14113, g:1.25183, raw value:-0.301708, completed qvalue:18.824
+   ├── action:I14, level:1, to_play:0, n:15, qvalue:-0.195292, policy:-5.1299, g:0.798255, raw value:-0.160827, completed qvalue:14.3541
+   ├── action:C14, level:1, to_play:0, n:15, qvalue:-0.207467, policy:-4.244, g:0.619838, raw value:-0.256321, completed qvalue:13.0706
+   ├── action:B14, level:1, to_play:0, n:15, qvalue:-0.309987, policy:-2.67988, g:0.622391, raw value:-0.188564, completed qvalue:2.26285
+   ├── action:D14, level:1, to_play:0, n:15, qvalue:-0.331451, policy:-2.00005, g:0.393884, raw value:-0.244905, completed qvalue:0
+   ├── action:K14, level:1, to_play:-1, n:0, qvalue:0, policy:-6.47198, g:0.473113, raw value:0, completed qvalue:10.1176
+   ├── action:B9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.68774, g:0.684603, raw value:0, completed qvalue:10.1176
+   ├── action:G10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.63049, g:0.609979, raw value:0, completed qvalue:10.1176
+   ├── action:H9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.74366, g:0.719273, raw value:0, completed qvalue:10.1176
+   ├── action:B7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.91242, g:0.872523, raw value:0, completed qvalue:10.1176
+   ├── action:I7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.75526, g:0.710964, raw value:0, completed qvalue:10.1176
+   ├── action:D10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99289, g:0.923071, raw value:0, completed qvalue:10.1176
+   ├── action:H5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.06756, g:0.984892, raw value:0, completed qvalue:10.1176
+   ├── action:F7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99307, g:0.887468, raw value:0, completed qvalue:10.1176
+   ├── action:E6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.106, g:0.983483, raw value:0, completed qvalue:10.1176
+   ├── action:I11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.90681, g:0.767607, raw value:0, completed qvalue:10.1176
+   ├── action:N11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0364, g:0.893961, raw value:0, completed qvalue:10.1176
+   ├── action:K6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.9801, g:0.836385, raw value:0, completed qvalue:10.1176
+   ├── action:N14, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04242, g:0.891389, raw value:0, completed qvalue:10.1176
+   ├── action:H13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.90646, g:0.750544, raw value:0, completed qvalue:10.1176
+   ├── action:G6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.84178, g:0.656756, raw value:0, completed qvalue:10.1176
+   ├── action:F13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.77861, g:0.588651, raw value:0, completed qvalue:10.1176
+   ├── action:N7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99253, g:0.795936, raw value:0, completed qvalue:10.1176
+   ├── action:G5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.05215, g:0.841086, raw value:0, completed qvalue:10.1176
+   ├── action:J14, level:1, to_play:-1, n:0, qvalue:0, policy:-6.75436, g:0.539069, raw value:0, completed qvalue:10.1176
+   ├── action:E10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01477, g:0.795705, raw value:0, completed qvalue:10.1176
+   ├── action:J9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.84929, g:0.608737, raw value:0, completed qvalue:10.1176
+   ├── action:H8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.84321, g:0.595733, raw value:0, completed qvalue:10.1176
+   ├── action:I13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.05804, g:0.799659, raw value:0, completed qvalue:10.1176
+   ├── action:C6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01536, g:0.747491, raw value:0, completed qvalue:10.1176
+   ├── action:K7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.96922, g:0.6944, raw value:0, completed qvalue:10.1176
+   ├── action:D7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.88614, g:0.610697, raw value:0, completed qvalue:10.1176
+   ├── action:N10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.96599, g:0.683998, raw value:0, completed qvalue:10.1176
+   ├── action:H7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.86321, g:0.58021, raw value:0, completed qvalue:10.1176
+   ├── action:M7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99677, g:0.697401, raw value:0, completed qvalue:10.1176
+   ├── action:I10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.76605, g:0.46259, raw value:0, completed qvalue:10.1176
+   ├── action:L14, level:1, to_play:-1, n:0, qvalue:0, policy:-6.9117, g:0.60162, raw value:0, completed qvalue:10.1176
+   ├── action:J10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.87328, g:0.561556, raw value:0, completed qvalue:10.1176
+   ├── action:J8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.80022, g:0.485857, raw value:0, completed qvalue:10.1176
+   ├── action:L11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10117, g:0.783497, raw value:0, completed qvalue:10.1176
+   ├── action:M4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.06743, g:0.746305, raw value:0, completed qvalue:10.1176
+   ├── action:F10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.68851, g:0.36459, raw value:0, completed qvalue:10.1176
+   ├── action:F5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.1297, g:0.803013, raw value:0, completed qvalue:10.1176
+   ├── action:A8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17595, g:0.84836, raw value:0, completed qvalue:10.1176
+   ├── action:G7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.84623, g:0.514707, raw value:0, completed qvalue:10.1176
+   ├── action:M6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.00964, g:0.675385, raw value:0, completed qvalue:10.1176
+   ├── action:A10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.07533, g:0.741025, raw value:0, completed qvalue:10.1176
+   ├── action:I2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.88302, g:0.546201, raw value:0, completed qvalue:10.1176
+   ├── action:K8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.91469, g:0.575864, raw value:0, completed qvalue:10.1176
+   ├── action:C13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.33494, g:0.991659, raw value:0, completed qvalue:10.1176
+   ├── action:I9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.58767, g:0.244157, raw value:0, completed qvalue:10.1176
+   ├── action:F3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.22539, g:0.881866, raw value:0, completed qvalue:10.1176
+   ├── action:M2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.14024, g:0.795653, raw value:0, completed qvalue:10.1176
+   ├── action:E9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.08543, g:0.739481, raw value:0, completed qvalue:10.1176
+   ├── action:F8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.88251, g:0.536491, raw value:0, completed qvalue:10.1176
+   ├── action:E2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.02544, g:0.663463, raw value:0, completed qvalue:10.1176
+   ├── action:K9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.83888, g:0.473459, raw value:0, completed qvalue:10.1176
+   ├── action:K2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.03251, g:0.661855, raw value:0, completed qvalue:10.1176
+   ├── action:M12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.11942, g:0.73376, raw value:0, completed qvalue:10.1176
+   ├── action:L13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.21989, g:0.820029, raw value:0, completed qvalue:10.1176
+   ├── action:G2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.94161, g:0.541286, raw value:0, completed qvalue:10.1176
+   ├── action:I8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.80137, g:0.395658, raw value:0, completed qvalue:10.1176
+   ├── action:B5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04357, g:0.624909, raw value:0, completed qvalue:10.1176
+   ├── action:C8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.95112, g:0.527063, raw value:0, completed qvalue:10.1176
+   ├── action:H3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17227, g:0.745812, raw value:0, completed qvalue:10.1176
+   ├── action:M9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.97707, g:0.550169, raw value:0, completed qvalue:10.1176
+   ├── action:J6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.92293, g:0.495095, raw value:0, completed qvalue:10.1176
+   ├── action:M10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.02764, g:0.599616, raw value:0, completed qvalue:10.1176
+   ├── action:L7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.07446, g:0.644854, raw value:0, completed qvalue:10.1176
+   ├── action:E7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.05514, g:0.624013, raw value:0, completed qvalue:10.1176
+   ├── action:J7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.86665, g:0.433975, raw value:0, completed qvalue:10.1176
+   ├── action:F6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0603, g:0.626415, raw value:0, completed qvalue:10.1176
+   ├── action:B8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.92854, g:0.491178, raw value:0, completed qvalue:10.1176
+   ├── action:F11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.91903, g:0.480073, raw value:0, completed qvalue:10.1176
+   ├── action:D12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.03499, g:0.591542, raw value:0, completed qvalue:10.1176
+   ├── action:N13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17315, g:0.724723, raw value:0, completed qvalue:10.1176
+   ├── action:B12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.83138, g:0.382709, raw value:0, completed qvalue:10.1176
+   ├── action:E5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.21026, g:0.760029, raw value:0, completed qvalue:10.1176
+   ├── action:B3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.26577, g:0.799037, raw value:0, completed qvalue:10.1176
+   ├── action:E12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.76624, g:0.299463, raw value:0, completed qvalue:10.1176
+   ├── action:G9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.8222, g:0.354742, raw value:0, completed qvalue:10.1176
+   ├── action:J12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.91459, g:0.445538, raw value:0, completed qvalue:10.1176
+   ├── action:O9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.21182, g:0.740716, raw value:0, completed qvalue:10.1176
+   ├── action:K5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.14902, g:0.67237, raw value:0, completed qvalue:10.1176
+   ├── action:L8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.08697, g:0.607298, raw value:0, completed qvalue:10.1176
+   ├── action:M5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.06866, g:0.584969, raw value:0, completed qvalue:10.1176
+   ├── action:M15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.09064, g:0.60428, raw value:0, completed qvalue:10.1176
+   ├── action:G13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.05663, g:0.568661, raw value:0, completed qvalue:10.1176
+   ├── action:M8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.9841, g:0.49528, raw value:0, completed qvalue:10.1176
+   ├── action:H2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.94367, g:0.454427, raw value:0, completed qvalue:10.1176
+   ├── action:H6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.97394, g:0.479938, raw value:0, completed qvalue:10.1176
+   ├── action:N8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0143, g:0.518578, raw value:0, completed qvalue:10.1176
+   ├── action:D6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.08791, g:0.589416, raw value:0, completed qvalue:10.1176
+   ├── action:J2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.91163, g:0.412395, raw value:0, completed qvalue:10.1176
+   ├── action:C5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01117, g:0.508869, raw value:0, completed qvalue:10.1176
+   ├── action:D8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.9207, g:0.415814, raw value:0, completed qvalue:10.1176
+   ├── action:M13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.16535, g:0.64683, raw value:0, completed qvalue:10.1176
+   ├── action:L6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.08455, g:0.565846, raw value:0, completed qvalue:10.1176
+   ├── action:G8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.87158, g:0.349017, raw value:0, completed qvalue:10.1176
+   ├── action:F12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.89348, g:0.363783, raw value:0, completed qvalue:10.1176
+   ├── action:M11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.97412, g:0.444414, raw value:0, completed qvalue:10.1176
+   ├── action:J5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.07859, g:0.542471, raw value:0, completed qvalue:10.1176
+   ├── action:F9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.93944, g:0.398456, raw value:0, completed qvalue:10.1176
+   ├── action:N5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10204, g:0.560763, raw value:0, completed qvalue:10.1176
+   ├── action:K10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01017, g:0.466638, raw value:0, completed qvalue:10.1176
+   ├── action:E8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.07763, g:0.533985, raw value:0, completed qvalue:10.1176
+   ├── action:A6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.14787, g:0.600365, raw value:0, completed qvalue:10.1176
+   ├── action:C11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04776, g:0.49398, raw value:0, completed qvalue:10.1176
+   ├── action:J15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.20071, g:0.64249, raw value:0, completed qvalue:10.1176
+   ├── action:F4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.13263, g:0.571067, raw value:0, completed qvalue:10.1176
+   ├── action:G3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17167, g:0.609311, raw value:0, completed qvalue:10.1176
+   ├── action:D2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.03616, g:0.469425, raw value:0, completed qvalue:10.1176
+   ├── action:L3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.35465, g:0.778376, raw value:0, completed qvalue:10.1176
+   ├── action:K3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25621, g:0.671264, raw value:0, completed qvalue:10.1176
+   ├── action:N4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.15763, g:0.571723, raw value:0, completed qvalue:10.1176
+   ├── action:J3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.172, g:0.585426, raw value:0, completed qvalue:10.1176
+   ├── action:B2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.20924, g:0.62145, raw value:0, completed qvalue:10.1176
+   ├── action:D4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.32298, g:0.735169, raw value:0, completed qvalue:10.1176
+   ├── action:A9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23752, g:0.647704, raw value:0, completed qvalue:10.1176
+   ├── action:H12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.80005, g:0.204445, raw value:0, completed qvalue:10.1176
+   ├── action:D11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.14823, g:0.546483, raw value:0, completed qvalue:10.1176
+   ├── action:J13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04137, g:0.438173, raw value:0, completed qvalue:10.1176
+   ├── action:N6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01558, g:0.40486, raw value:0, completed qvalue:10.1176
+   ├── action:D3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36874, g:0.755188, raw value:0, completed qvalue:10.1176
+   ├── action:I6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.93063, g:0.316996, raw value:0, completed qvalue:10.1176
+   ├── action:O12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.32674, g:0.710859, raw value:0, completed qvalue:10.1176
+   ├── action:K12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.02955, g:0.40934, raw value:0, completed qvalue:10.1176
+   ├── action:B6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99612, g:0.37213, raw value:0, completed qvalue:10.1176
+   ├── action:I5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.02952, g:0.398262, raw value:0, completed qvalue:10.1176
+   ├── action:O7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.22483, g:0.593578, raw value:0, completed qvalue:10.1176
+   ├── action:H1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.2598, g:0.620576, raw value:0, completed qvalue:10.1176
+   ├── action:D1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.33203, g:0.689946, raw value:0, completed qvalue:10.1176
+   ├── action:C7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99119, g:0.34639, raw value:0, completed qvalue:10.1176
+   ├── action:F1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.258, g:0.61286, raw value:0, completed qvalue:10.1176
+   ├── action:N9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.94423, g:0.296277, raw value:0, completed qvalue:10.1176
+   ├── action:C2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10929, g:0.457164, raw value:0, completed qvalue:10.1176
+   ├── action:G1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.24392, g:0.591477, raw value:0, completed qvalue:10.1176
+   ├── action:L12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.21797, g:0.565455, raw value:0, completed qvalue:10.1176
+   ├── action:L2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.13594, g:0.482685, raw value:0, completed qvalue:10.1176
+   ├── action:O6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.22256, g:0.565601, raw value:0, completed qvalue:10.1176
+   ├── action:O11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.27569, g:0.618464, raw value:0, completed qvalue:10.1176
+   ├── action:G4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0909, g:0.427453, raw value:0, completed qvalue:10.1176
+   ├── action:B11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.88462, g:0.220488, raw value:0, completed qvalue:10.1176
+   ├── action:N3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25857, g:0.58429, raw value:0, completed qvalue:10.1176
+   ├── action:D13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.35947, g:0.685034, raw value:0, completed qvalue:10.1176
+   ├── action:H4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.09627, g:0.420165, raw value:0, completed qvalue:10.1176
+   ├── action:D9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0931, g:0.415568, raw value:0, completed qvalue:10.1176
+   ├── action:D5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25555, g:0.568518, raw value:0, completed qvalue:10.1176
+   ├── action:C4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.11722, g:0.425167, raw value:0, completed qvalue:10.1176
+   ├── action:A7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.0871, g:0.391923, raw value:0, completed qvalue:10.1176
+   ├── action:C9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.98498, g:0.285702, raw value:0, completed qvalue:10.1176
+   ├── action:A11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10094, g:0.400447, raw value:0, completed qvalue:10.1176
+   ├── action:A2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.40844, g:0.704595, raw value:0, completed qvalue:10.1176
+   ├── action:K13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.11956, g:0.415088, raw value:0, completed qvalue:10.1176
+   ├── action:O3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.52094, g:0.814921, raw value:0, completed qvalue:10.1176
+   ├── action:M14, level:1, to_play:-1, n:0, qvalue:0, policy:-6.99051, g:0.279492, raw value:0, completed qvalue:10.1176
+   ├── action:K11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.01252, g:0.297732, raw value:0, completed qvalue:10.1176
+   ├── action:N12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.05023, g:0.335305, raw value:0, completed qvalue:10.1176
+   ├── action:L15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.28783, g:0.566688, raw value:0, completed qvalue:10.1176
+   ├── action:M1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.38339, g:0.661335, raw value:0, completed qvalue:10.1176
+   ├── action:F2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.96217, g:0.237435, raw value:0, completed qvalue:10.1176
+   ├── action:C3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.18262, g:0.452107, raw value:0, completed qvalue:10.1176
+   ├── action:L4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25343, g:0.520759, raw value:0, completed qvalue:10.1176
+   ├── action:L10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.14827, g:0.40921, raw value:0, completed qvalue:10.1176
+   ├── action:B4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.13086, g:0.388836, raw value:0, completed qvalue:10.1176
+   ├── action:L5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17506, g:0.424462, raw value:0, completed qvalue:10.1176
+   ├── action:I1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.24965, g:0.494857, raw value:0, completed qvalue:10.1176
+   ├── action:K4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.11483, g:0.352486, raw value:0, completed qvalue:10.1176
+   ├── action:O10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.24423, g:0.47954, raw value:0, completed qvalue:10.1176
+   ├── action:M3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.2135, g:0.433856, raw value:0, completed qvalue:10.1176
+   ├── action:J4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10163, g:0.320567, raw value:0, completed qvalue:10.1176
+   ├── action:E1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.37622, g:0.594188, raw value:0, completed qvalue:10.1176
+   ├── action:I4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.06016, g:0.244187, raw value:0, completed qvalue:10.1176
+   ├── action:A4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.42814, g:0.61091, raw value:0, completed qvalue:10.1176
+   ├── action:C10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10251, g:0.278874, raw value:0, completed qvalue:10.1176
+   ├── action:I15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.2551, g:0.411098, raw value:0, completed qvalue:10.1176
+   ├── action:D15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.59655, g:0.745542, raw value:0, completed qvalue:10.1176
+   ├── action:A14, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23786, g:0.386116, raw value:0, completed qvalue:10.1176
+   ├── action:O4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36733, g:0.511, raw value:0, completed qvalue:10.1176
+   ├── action:N2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.39268, g:0.515498, raw value:0, completed qvalue:10.1176
+   ├── action:L9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.10812, g:0.225767, raw value:0, completed qvalue:10.1176
+   ├── action:J1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.24901, g:0.358122, raw value:0, completed qvalue:10.1176
+   ├── action:K1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.44603, g:0.553369, raw value:0, completed qvalue:10.1176
+   ├── action:O8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.22835, g:0.32347, raw value:0, completed qvalue:10.1176
+   ├── action:B13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.19109, g:0.283329, raw value:0, completed qvalue:10.1176
+   ├── action:E13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.15274, g:0.238576, raw value:0, completed qvalue:10.1176
+   ├── action:C1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.58843, g:0.666931, raw value:0, completed qvalue:10.1176
+   ├── action:K15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.19171, g:0.266174, raw value:0, completed qvalue:10.1176
+   ├── action:O13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.37072, g:0.441975, raw value:0, completed qvalue:10.1176
+   ├── action:E3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.30246, g:0.365387, raw value:0, completed qvalue:10.1176
+   ├── action:C15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.54265, g:0.59174, raw value:0, completed qvalue:10.1176
+   ├── action:C12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.34366, g:0.373189, raw value:0, completed qvalue:10.1176
+   ├── action:E4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23204, g:0.246113, raw value:0, completed qvalue:10.1176
+   ├── action:A12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.4918, g:0.497564, raw value:0, completed qvalue:10.1176
+   ├── action:O5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.2805, g:0.284959, raw value:0, completed qvalue:10.1176
+   ├── action:L1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.6257, g:0.614423, raw value:0, completed qvalue:10.1176
+   ├── action:N15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.56969, g:0.480445, raw value:0, completed qvalue:10.1176
+   ├── action:A5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.31164, g:0.219529, raw value:0, completed qvalue:10.1176
+   ├── action:A3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.70638, g:0.600911, raw value:0, completed qvalue:10.1176
+   ├── action:B1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.67195, g:0.541138, raw value:0, completed qvalue:10.1176
+   ├── action:O2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.60274, g:0.42523, raw value:0, completed qvalue:10.1176
+   ├── action:O14, level:1, to_play:-1, n:0, qvalue:0, policy:-7.60018, g:0.386094, raw value:0, completed qvalue:10.1176
+   ├── action:A15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.97628, g:0.738392, raw value:0, completed qvalue:10.1176
+   ├── action:O1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.75056, g:0.506204, raw value:0, completed qvalue:10.1176
+   ├── action:A13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.81841, g:0.567731, raw value:0, completed qvalue:10.1176
+   ├── action:E15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.70241, g:0.427497, raw value:0, completed qvalue:10.1176
+   ├── action:N1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.59396, g:0.303292, raw value:0, completed qvalue:10.1176
+   ├── action:H15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.98507, g:0.691482, raw value:0, completed qvalue:10.1176
+   ├── action:G15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.96896, g:0.631372, raw value:0, completed qvalue:10.1176
+   ├── action:O15, level:1, to_play:-1, n:0, qvalue:0, policy:-8.03131, g:0.649255, raw value:0, completed qvalue:10.1176
+   ├── action:B15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.88957, g:0.467167, raw value:0, completed qvalue:10.1176
+   ├── action:F15, level:1, to_play:-1, n:0, qvalue:0, policy:-8.11378, g:0.421431, raw value:0, completed qvalue:10.1176
+   └── action:A1, level:1, to_play:-1, n:0, qvalue:0, policy:-8.61074, g:0.838434, raw value:0, completed qvalue:10.1176
+   A B C D E F G H I J K L M N O 
+   ------------------------------
+15|- - - - - - - - - - - - - - - 
+14|- - - - [31mx [0mo - - - - - - - - - 
+13|- - - - - - - - - - - - - - - 
+12|- - - - - - - - - - - - - - - 
+11|- - - - - - - - - - - - - - - 
+10|- - - - - - - - - - - - - - - 
+ 9|- - - - - - - - - - - - - - - 
+ 8|- - - - - - - - - - - - - - - 
+ 7|- - - - - - - - - - - - - - - 
+ 6|- - - - - - - - - - - - - - - 
+ 5|- - - - - - - - - - - - - - - 
+ 4|- - - - - - - - - - - - - - - 
+ 3|- - - - - - - - - - - - - - - 
+ 2|- - - - - - - - - - - - - - - 
+ 1|- - - - - - - - - - - - - - - 
+action: E14
+value: -0.102283
+policy: 
+network value: 0.151754
+predict win rate: 44.8859%
+
+Cost time: 2.29443
+├── action:@15, level:0, to_play:0, n:1000, qvalue:-0.144362, policy:0, g:0, raw value:-0.183756, completed qvalue:0
+   ├── action:G11, level:1, to_play:1, n:240, qvalue:0.266424, policy:-4.46629, g:0.823348, raw value:0.227174, completed qvalue:29
+   ├── action:G14, level:1, to_play:1, n:240, qvalue:0.101245, policy:-0.250835, g:0.676691, raw value:0.118555, completed qvalue:12.7071
+   ├── action:F12, level:1, to_play:1, n:108, qvalue:0.170223, policy:-4.4929, g:0.801361, raw value:0.144278, completed qvalue:19.511
+   ├── action:H14, level:1, to_play:1, n:108, qvalue:0.0878595, policy:-1.60317, g:0.485293, raw value:0.181954, completed qvalue:11.3868
+   ├── action:H10, level:1, to_play:1, n:46, qvalue:0.163915, policy:-4.77798, g:0.663179, raw value:0.127826, completed qvalue:18.8888
+   ├── action:D14, level:1, to_play:1, n:46, qvalue:0.133491, policy:-2.19105, g:0.68989, raw value:0.0586338, completed qvalue:15.8878
+   ├── action:C14, level:1, to_play:1, n:46, qvalue:0.0849864, policy:-0.843133, g:0.372608, raw value:0.0101671, completed qvalue:11.1034
+   ├── action:I14, level:1, to_play:1, n:46, qvalue:0.078298, policy:-2.82343, g:0.720939, raw value:0.00996719, completed qvalue:10.4437
+   ├── action:F10, level:1, to_play:1, n:15, qvalue:0.145088, policy:-4.8488, g:0.521719, raw value:0.085642, completed qvalue:17.0317
+   ├── action:K14, level:1, to_play:1, n:15, qvalue:0.0955184, policy:-4.0823, g:0.806109, raw value:-0.287703, completed qvalue:12.1423
+   ├── action:I10, level:1, to_play:1, n:15, qvalue:0.0960628, policy:-4.85312, g:0.701488, raw value:-0.1798, completed qvalue:12.196
+   ├── action:G9, level:1, to_play:1, n:15, qvalue:0.0755623, policy:-4.68657, g:0.710795, raw value:-0.0917099, completed qvalue:10.1738
+   ├── action:F11, level:1, to_play:1, n:15, qvalue:0.0582362, policy:-4.42449, g:0.511635, raw value:0.175905, completed qvalue:8.46484
+   ├── action:G10, level:1, to_play:1, n:15, qvalue:0.038377, policy:-4.48753, g:0.482598, raw value:-0.180903, completed qvalue:6.50598
+   ├── action:B14, level:1, to_play:1, n:15, qvalue:-0.0275813, policy:-2.89795, g:0.768763, raw value:-0.166478, completed qvalue:0
+   ├── action:J14, level:1, to_play:1, n:15, qvalue:-0.010805, policy:-4.69808, g:0.572562, raw value:-0.172074, completed qvalue:1.65477
+   ├── action:I9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.05594, g:0.715905, raw value:0, completed qvalue:11.9078
+   ├── action:E10, level:1, to_play:-1, n:0, qvalue:0, policy:-4.99139, g:0.621236, raw value:0, completed qvalue:11.9078
+   ├── action:G8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.21217, g:0.817555, raw value:0, completed qvalue:11.9078
+   ├── action:H11, level:1, to_play:-1, n:0, qvalue:0, policy:-5.00325, g:0.537129, raw value:0, completed qvalue:11.9078
+   ├── action:E11, level:1, to_play:-1, n:0, qvalue:0, policy:-4.93756, g:0.441119, raw value:0, completed qvalue:11.9078
+   ├── action:I12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.26377, g:0.763105, raw value:0, completed qvalue:11.9078
+   ├── action:L14, level:1, to_play:-1, n:0, qvalue:0, policy:-5.51113, g:1.00032, raw value:0, completed qvalue:11.9078
+   ├── action:F9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.02831, g:0.514912, raw value:0, completed qvalue:11.9078
+   ├── action:B9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.37332, g:0.798726, raw value:0, completed qvalue:11.9078
+   ├── action:H7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.42305, g:0.841684, raw value:0, completed qvalue:11.9078
+   ├── action:I8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.04304, g:0.456409, raw value:0, completed qvalue:11.9078
+   ├── action:I7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.23455, g:0.647083, raw value:0, completed qvalue:11.9078
+   ├── action:B11, level:1, to_play:-1, n:0, qvalue:0, policy:-5.33047, g:0.74107, raw value:0, completed qvalue:11.9078
+   ├── action:J7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.7442, g:1.11461, raw value:0, completed qvalue:11.9078
+   ├── action:J10, level:1, to_play:-1, n:0, qvalue:0, policy:-5.23976, g:0.56681, raw value:0, completed qvalue:11.9078
+   ├── action:I11, level:1, to_play:-1, n:0, qvalue:0, policy:-5.06286, g:0.379973, raw value:0, completed qvalue:11.9078
+   ├── action:J8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.22261, g:0.49055, raw value:0, completed qvalue:11.9078
+   ├── action:J9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.39963, g:0.638741, raw value:0, completed qvalue:11.9078
+   ├── action:H9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.0773, g:0.267126, raw value:0, completed qvalue:11.9078
+   ├── action:B12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.34866, g:0.389067, raw value:0, completed qvalue:11.9078
+   ├── action:F8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.50134, g:0.540113, raw value:0, completed qvalue:11.9078
+   ├── action:H12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.29531, g:0.282399, raw value:0, completed qvalue:11.9078
+   ├── action:G7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.25797, g:0.240957, raw value:0, completed qvalue:11.9078
+   ├── action:M14, level:1, to_play:-1, n:0, qvalue:0, policy:-5.69644, g:0.666228, raw value:0, completed qvalue:11.9078
+   ├── action:E9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.42877, g:0.396171, raw value:0, completed qvalue:11.9078
+   ├── action:D12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.53626, g:0.498172, raw value:0, completed qvalue:11.9078
+   ├── action:F6, level:1, to_play:-1, n:0, qvalue:0, policy:-5.99088, g:0.942643, raw value:0, completed qvalue:11.9078
+   ├── action:J11, level:1, to_play:-1, n:0, qvalue:0, policy:-5.6639, g:0.612503, raw value:0, completed qvalue:11.9078
+   ├── action:D9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.99234, g:0.930548, raw value:0, completed qvalue:11.9078
+   ├── action:K9, level:1, to_play:-1, n:0, qvalue:0, policy:-5.83949, g:0.736482, raw value:0, completed qvalue:11.9078
+   ├── action:E8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.61759, g:0.49831, raw value:0, completed qvalue:11.9078
+   ├── action:F7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.66408, g:0.523027, raw value:0, completed qvalue:11.9078
+   ├── action:I6, level:1, to_play:-1, n:0, qvalue:0, policy:-5.74582, g:0.580373, raw value:0, completed qvalue:11.9078
+   ├── action:J12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.72989, g:0.550783, raw value:0, completed qvalue:11.9078
+   ├── action:H8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.36143, g:0.17745, raw value:0, completed qvalue:11.9078
+   ├── action:J13, level:1, to_play:-1, n:0, qvalue:0, policy:-5.95443, g:0.764843, raw value:0, completed qvalue:11.9078
+   ├── action:D11, level:1, to_play:-1, n:0, qvalue:0, policy:-5.72405, g:0.500941, raw value:0, completed qvalue:11.9078
+   ├── action:D10, level:1, to_play:-1, n:0, qvalue:0, policy:-5.54972, g:0.312763, raw value:0, completed qvalue:11.9078
+   ├── action:B7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.25375, g:0.971938, raw value:0, completed qvalue:11.9078
+   ├── action:E12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.68038, g:0.380626, raw value:0, completed qvalue:11.9078
+   ├── action:J6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.09943, g:0.754069, raw value:0, completed qvalue:11.9078
+   ├── action:K8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.98952, g:0.635969, raw value:0, completed qvalue:11.9078
+   ├── action:N7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.32733, g:0.970764, raw value:0, completed qvalue:11.9078
+   ├── action:L10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.18309, g:0.80729, raw value:0, completed qvalue:11.9078
+   ├── action:B6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.36517, g:0.982692, raw value:0, completed qvalue:11.9078
+   ├── action:H6, level:1, to_play:-1, n:0, qvalue:0, policy:-5.90159, g:0.514061, raw value:0, completed qvalue:11.9078
+   ├── action:C12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.22843, g:0.82846, raw value:0, completed qvalue:11.9078
+   ├── action:B10, level:1, to_play:-1, n:0, qvalue:0, policy:-5.93572, g:0.503348, raw value:0, completed qvalue:11.9078
+   ├── action:B8, level:1, to_play:-1, n:0, qvalue:0, policy:-5.9111, g:0.446802, raw value:0, completed qvalue:11.9078
+   ├── action:G6, level:1, to_play:-1, n:0, qvalue:0, policy:-5.94479, g:0.478492, raw value:0, completed qvalue:11.9078
+   ├── action:K7, level:1, to_play:-1, n:0, qvalue:0, policy:-5.98836, g:0.502047, raw value:0, completed qvalue:11.9078
+   ├── action:H13, level:1, to_play:-1, n:0, qvalue:0, policy:-5.96667, g:0.458717, raw value:0, completed qvalue:11.9078
+   ├── action:F13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.13793, g:0.621576, raw value:0, completed qvalue:11.9078
+   ├── action:L11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.29669, g:0.772877, raw value:0, completed qvalue:11.9078
+   ├── action:E13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.07195, g:0.54174, raw value:0, completed qvalue:11.9078
+   ├── action:E7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.09103, g:0.560132, raw value:0, completed qvalue:11.9078
+   ├── action:K10, level:1, to_play:-1, n:0, qvalue:0, policy:-5.85987, g:0.321739, raw value:0, completed qvalue:11.9078
+   ├── action:L9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.25905, g:0.712668, raw value:0, completed qvalue:11.9078
+   ├── action:H4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.42952, g:0.880103, raw value:0, completed qvalue:11.9078
+   ├── action:D8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.19166, g:0.641435, raw value:0, completed qvalue:11.9078
+   ├── action:G12, level:1, to_play:-1, n:0, qvalue:0, policy:-5.81668, g:0.263536, raw value:0, completed qvalue:11.9078
+   ├── action:D7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.24009, g:0.642679, raw value:0, completed qvalue:11.9078
+   ├── action:H5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.2295, g:0.617294, raw value:0, completed qvalue:11.9078
+   ├── action:L7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.2132, g:0.578471, raw value:0, completed qvalue:11.9078
+   ├── action:F2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.55265, g:0.904012, raw value:0, completed qvalue:11.9078
+   ├── action:G13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.06026, g:0.402294, raw value:0, completed qvalue:11.9078
+   ├── action:M8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.17178, g:0.49445, raw value:0, completed qvalue:11.9078
+   ├── action:D13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.44146, g:0.756366, raw value:0, completed qvalue:11.9078
+   ├── action:F5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.28613, g:0.597763, raw value:0, completed qvalue:11.9078
+   ├── action:G5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.22032, g:0.521831, raw value:0, completed qvalue:11.9078
+   ├── action:J4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.58568, g:0.883708, raw value:0, completed qvalue:11.9078
+   ├── action:I5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.20222, g:0.495438, raw value:0, completed qvalue:11.9078
+   ├── action:C9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.28458, g:0.57515, raw value:0, completed qvalue:11.9078
+   ├── action:L8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.14829, g:0.430506, raw value:0, completed qvalue:11.9078
+   ├── action:C8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.42877, g:0.708715, raw value:0, completed qvalue:11.9078
+   ├── action:C11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.4121, g:0.68513, raw value:0, completed qvalue:11.9078
+   ├── action:C6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.60775, g:0.872288, raw value:0, completed qvalue:11.9078
+   ├── action:M10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.31817, g:0.571849, raw value:0, completed qvalue:11.9078
+   ├── action:I13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.14896, g:0.401866, raw value:0, completed qvalue:11.9078
+   ├── action:M9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.24214, g:0.49233, raw value:0, completed qvalue:11.9078
+   ├── action:K12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.05865, g:0.306995, raw value:0, completed qvalue:11.9078
+   ├── action:C10, level:1, to_play:-1, n:0, qvalue:0, policy:-5.93583, g:0.157522, raw value:0, completed qvalue:11.9078
+   ├── action:H2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.50756, g:0.726621, raw value:0, completed qvalue:11.9078
+   ├── action:K4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.67116, g:0.886603, raw value:0, completed qvalue:11.9078
+   ├── action:N8, level:1, to_play:-1, n:0, qvalue:0, policy:-6.37717, g:0.592546, raw value:0, completed qvalue:11.9078
+   ├── action:I2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.52742, g:0.711456, raw value:0, completed qvalue:11.9078
+   ├── action:M11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.49002, g:0.66919, raw value:0, completed qvalue:11.9078
+   ├── action:G3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.55386, g:0.728038, raw value:0, completed qvalue:11.9078
+   ├── action:K11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.28795, g:0.457965, raw value:0, completed qvalue:11.9078
+   ├── action:L6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.28793, g:0.45642, raw value:0, completed qvalue:11.9078
+   ├── action:E5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.51656, g:0.684974, raw value:0, completed qvalue:11.9078
+   ├── action:M7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.27217, g:0.438243, raw value:0, completed qvalue:11.9078
+   ├── action:N10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.43907, g:0.593529, raw value:0, completed qvalue:11.9078
+   ├── action:E6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.33238, g:0.478409, raw value:0, completed qvalue:11.9078
+   ├── action:J2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.6184, g:0.762803, raw value:0, completed qvalue:11.9078
+   ├── action:N11, level:1, to_play:-1, n:0, qvalue:0, policy:-6.53044, g:0.64551, raw value:0, completed qvalue:11.9078
+   ├── action:J3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.63103, g:0.736038, raw value:0, completed qvalue:11.9078
+   ├── action:N9, level:1, to_play:-1, n:0, qvalue:0, policy:-6.43707, g:0.539128, raw value:0, completed qvalue:11.9078
+   ├── action:K5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.55951, g:0.642505, raw value:0, completed qvalue:11.9078
+   ├── action:L5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.49875, g:0.579272, raw value:0, completed qvalue:11.9078
+   ├── action:M12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.62974, g:0.691191, raw value:0, completed qvalue:11.9078
+   ├── action:L12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.27969, g:0.331584, raw value:0, completed qvalue:11.9078
+   ├── action:F4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.53327, g:0.571101, raw value:0, completed qvalue:11.9078
+   ├── action:N3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.89555, g:0.914815, raw value:0, completed qvalue:11.9078
+   ├── action:K3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.78832, g:0.803161, raw value:0, completed qvalue:11.9078
+   ├── action:M5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.59058, g:0.605414, raw value:0, completed qvalue:11.9078
+   ├── action:M4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.70608, g:0.715749, raw value:0, completed qvalue:11.9078
+   ├── action:F3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.56733, g:0.57672, raw value:0, completed qvalue:11.9078
+   ├── action:K6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.21382, g:0.218061, raw value:0, completed qvalue:11.9078
+   ├── action:E2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.66348, g:0.666029, raw value:0, completed qvalue:11.9078
+   ├── action:C7, level:1, to_play:-1, n:0, qvalue:0, policy:-6.61311, g:0.608109, raw value:0, completed qvalue:11.9078
+   ├── action:D3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.80174, g:0.794421, raw value:0, completed qvalue:11.9078
+   ├── action:E3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.73088, g:0.720901, raw value:0, completed qvalue:11.9078
+   ├── action:J5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.39386, g:0.37826, raw value:0, completed qvalue:11.9078
+   ├── action:B5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.59409, g:0.567998, raw value:0, completed qvalue:11.9078
+   ├── action:I3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.48498, g:0.45447, raw value:0, completed qvalue:11.9078
+   ├── action:D6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.59796, g:0.563028, raw value:0, completed qvalue:11.9078
+   ├── action:M6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.30035, g:0.265345, raw value:0, completed qvalue:11.9078
+   ├── action:C5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.77822, g:0.732156, raw value:0, completed qvalue:11.9078
+   ├── action:N5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.7257, g:0.677885, raw value:0, completed qvalue:11.9078
+   ├── action:H3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.49904, g:0.398181, raw value:0, completed qvalue:11.9078
+   ├── action:N14, level:1, to_play:-1, n:0, qvalue:0, policy:-6.58182, g:0.479971, raw value:0, completed qvalue:11.9078
+   ├── action:G2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.55797, g:0.432613, raw value:0, completed qvalue:11.9078
+   ├── action:I4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.43819, g:0.310785, raw value:0, completed qvalue:11.9078
+   ├── action:G4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.51505, g:0.376581, raw value:0, completed qvalue:11.9078
+   ├── action:E4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.73758, g:0.592316, raw value:0, completed qvalue:11.9078
+   ├── action:N4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.8936, g:0.738043, raw value:0, completed qvalue:11.9078
+   ├── action:L4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.72092, g:0.562585, raw value:0, completed qvalue:11.9078
+   ├── action:N2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.61234, g:0.437727, raw value:0, completed qvalue:11.9078
+   ├── action:B13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.79696, g:0.604623, raw value:0, completed qvalue:11.9078
+   ├── action:B2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.11295, g:0.916032, raw value:0, completed qvalue:11.9078
+   ├── action:N6, level:1, to_play:-1, n:0, qvalue:0, policy:-6.63887, g:0.412775, raw value:0, completed qvalue:11.9078
+   ├── action:B3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.85952, g:0.622141, raw value:0, completed qvalue:11.9078
+   ├── action:K13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.65682, g:0.393881, raw value:0, completed qvalue:11.9078
+   ├── action:G1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.17747, g:0.909351, raw value:0, completed qvalue:11.9078
+   ├── action:N13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.88406, g:0.607851, raw value:0, completed qvalue:11.9078
+   ├── action:D2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.82413, g:0.54569, raw value:0, completed qvalue:11.9078
+   ├── action:N12, level:1, to_play:-1, n:0, qvalue:0, policy:-6.81665, g:0.534814, raw value:0, completed qvalue:11.9078
+   ├── action:L3, level:1, to_play:-1, n:0, qvalue:0, policy:-6.82799, g:0.545643, raw value:0, completed qvalue:11.9078
+   ├── action:M13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.83902, g:0.539325, raw value:0, completed qvalue:11.9078
+   ├── action:A14, level:1, to_play:-1, n:0, qvalue:0, policy:-7.20291, g:0.881316, raw value:0, completed qvalue:11.9078
+   ├── action:J15, level:1, to_play:-1, n:0, qvalue:0, policy:-6.98636, g:0.64841, raw value:0, completed qvalue:11.9078
+   ├── action:A7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.26173, g:0.853332, raw value:0, completed qvalue:11.9078
+   ├── action:K2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.8681, g:0.452696, raw value:0, completed qvalue:11.9078
+   ├── action:M2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.7521, g:0.336304, raw value:0, completed qvalue:11.9078
+   ├── action:L13, level:1, to_play:-1, n:0, qvalue:0, policy:-6.90964, g:0.492273, raw value:0, completed qvalue:11.9078
+   ├── action:D4, level:1, to_play:-1, n:0, qvalue:0, policy:-6.90602, g:0.487831, raw value:0, completed qvalue:11.9078
+   ├── action:A9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.16967, g:0.741533, raw value:0, completed qvalue:11.9078
+   ├── action:A10, level:1, to_play:-1, n:0, qvalue:0, policy:-6.89698, g:0.456682, raw value:0, completed qvalue:11.9078
+   ├── action:D5, level:1, to_play:-1, n:0, qvalue:0, policy:-6.81702, g:0.363827, raw value:0, completed qvalue:11.9078
+   ├── action:L2, level:1, to_play:-1, n:0, qvalue:0, policy:-6.73518, g:0.261949, raw value:0, completed qvalue:11.9078
+   ├── action:O12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36314, g:0.884924, raw value:0, completed qvalue:11.9078
+   ├── action:N15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23699, g:0.744489, raw value:0, completed qvalue:11.9078
+   ├── action:E1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.16015, g:0.652987, raw value:0, completed qvalue:11.9078
+   ├── action:I15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36001, g:0.849114, raw value:0, completed qvalue:11.9078
+   ├── action:A12, level:1, to_play:-1, n:0, qvalue:0, policy:-7.27033, g:0.758304, raw value:0, completed qvalue:11.9078
+   ├── action:C3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.18307, g:0.668662, raw value:0, completed qvalue:11.9078
+   ├── action:M3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04709, g:0.514909, raw value:0, completed qvalue:11.9078
+   ├── action:O6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.30435, g:0.760931, raw value:0, completed qvalue:11.9078
+   ├── action:C13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.27086, g:0.716365, raw value:0, completed qvalue:11.9078
+   ├── action:O9, level:1, to_play:-1, n:0, qvalue:0, policy:-7.26809, g:0.711285, raw value:0, completed qvalue:11.9078
+   ├── action:O7, level:1, to_play:-1, n:0, qvalue:0, policy:-7.28414, g:0.70352, raw value:0, completed qvalue:11.9078
+   ├── action:N1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.44664, g:0.859164, raw value:0, completed qvalue:11.9078
+   ├── action:B4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.07575, g:0.47799, raw value:0, completed qvalue:11.9078
+   ├── action:A8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.24684, g:0.635756, raw value:0, completed qvalue:11.9078
+   ├── action:A13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25274, g:0.632088, raw value:0, completed qvalue:11.9078
+   ├── action:O10, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36892, g:0.746577, raw value:0, completed qvalue:11.9078
+   ├── action:I1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.1972, g:0.558927, raw value:0, completed qvalue:11.9078
+   ├── action:O4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.54559, g:0.893237, raw value:0, completed qvalue:11.9078
+   ├── action:C2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.04087, g:0.370081, raw value:0, completed qvalue:11.9078
+   ├── action:L15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.40279, g:0.72151, raw value:0, completed qvalue:11.9078
+   ├── action:O8, level:1, to_play:-1, n:0, qvalue:0, policy:-7.26533, g:0.579875, raw value:0, completed qvalue:11.9078
+   ├── action:D15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23151, g:0.539081, raw value:0, completed qvalue:11.9078
+   ├── action:F1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.25822, g:0.549824, raw value:0, completed qvalue:11.9078
+   ├── action:C4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.21608, g:0.501527, raw value:0, completed qvalue:11.9078
+   ├── action:K15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.40416, g:0.67918, raw value:0, completed qvalue:11.9078
+   ├── action:H1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.13521, g:0.405935, raw value:0, completed qvalue:11.9078
+   ├── action:G15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.16129, g:0.426997, raw value:0, completed qvalue:11.9078
+   ├── action:J1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.51283, g:0.774496, raw value:0, completed qvalue:11.9078
+   ├── action:O11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.33734, g:0.580011, raw value:0, completed qvalue:11.9078
+   ├── action:A3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.49045, g:0.728772, raw value:0, completed qvalue:11.9078
+   ├── action:O14, level:1, to_play:-1, n:0, qvalue:0, policy:-7.31888, g:0.532612, raw value:0, completed qvalue:11.9078
+   ├── action:H15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.51989, g:0.704659, raw value:0, completed qvalue:11.9078
+   ├── action:L1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.75275, g:0.923414, raw value:0, completed qvalue:11.9078
+   ├── action:D1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.23682, g:0.397605, raw value:0, completed qvalue:11.9078
+   ├── action:E15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.34396, g:0.49123, raw value:0, completed qvalue:11.9078
+   ├── action:A6, level:1, to_play:-1, n:0, qvalue:0, policy:-7.40519, g:0.538097, raw value:0, completed qvalue:11.9078
+   ├── action:B15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.37957, g:0.500102, raw value:0, completed qvalue:11.9078
+   ├── action:A5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.54147, g:0.660277, raw value:0, completed qvalue:11.9078
+   ├── action:A11, level:1, to_play:-1, n:0, qvalue:0, policy:-7.37366, g:0.435446, raw value:0, completed qvalue:11.9078
+   ├── action:C1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.62068, g:0.66098, raw value:0, completed qvalue:11.9078
+   ├── action:M15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.57485, g:0.584972, raw value:0, completed qvalue:11.9078
+   ├── action:O5, level:1, to_play:-1, n:0, qvalue:0, policy:-7.36862, g:0.376442, raw value:0, completed qvalue:11.9078
+   ├── action:A2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.49794, g:0.469525, raw value:0, completed qvalue:11.9078
+   ├── action:O13, level:1, to_play:-1, n:0, qvalue:0, policy:-7.48718, g:0.406907, raw value:0, completed qvalue:11.9078
+   ├── action:O2, level:1, to_play:-1, n:0, qvalue:0, policy:-7.48896, g:0.402382, raw value:0, completed qvalue:11.9078
+   ├── action:C15, level:1, to_play:-1, n:0, qvalue:0, policy:-7.51343, g:0.405658, raw value:0, completed qvalue:11.9078
+   ├── action:B1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.56129, g:0.33034, raw value:0, completed qvalue:11.9078
+   ├── action:K1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.5684, g:0.317761, raw value:0, completed qvalue:11.9078
+   ├── action:O3, level:1, to_play:-1, n:0, qvalue:0, policy:-7.59071, g:0.324031, raw value:0, completed qvalue:11.9078
+   ├── action:A4, level:1, to_play:-1, n:0, qvalue:0, policy:-7.62825, g:0.337844, raw value:0, completed qvalue:11.9078
+   ├── action:O1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.89415, g:0.492255, raw value:0, completed qvalue:11.9078
+   ├── action:M1, level:1, to_play:-1, n:0, qvalue:0, policy:-7.87167, g:0.435544, raw value:0, completed qvalue:11.9078
+   ├── action:F15, level:1, to_play:-1, n:0, qvalue:0, policy:-8.03972, g:0.558734, raw value:0, completed qvalue:11.9078
+   ├── action:A1, level:1, to_play:-1, n:0, qvalue:0, policy:-8.09498, g:0.520726, raw value:0, completed qvalue:11.9078
+   ├── action:O15, level:1, to_play:-1, n:0, qvalue:0, policy:-8.24259, g:0.604846, raw value:0, completed qvalue:11.9078
+   └── action:A15, level:1, to_play:-1, n:0, qvalue:0, policy:-8.42124, g:0.141524, raw value:0, completed qvalue:11.9078
+   A B C D E F G H I J K L M N O 
+   ------------------------------
+15|- - - - - - - - - - - - - - - 
+14|- - - - x o - - - - - - - - - 
+13|- - - - - - - - - - - - - - - 
+12|- - - - - - - - - - - - - - - 
+11|- - - - - - [31mo [0m- - - - - - - - 
+10|- - - - - - - - - - - - - - - 
+ 9|- - - - - - - - - - - - - - - 
+ 8|- - - - - - - - - - - - - - - 
+ 7|- - - - - - - - - - - - - - - 
+ 6|- - - - - - - - - - - - - - - 
+ 5|- - - - - - - - - - - - - - - 
+ 4|- - - - - - - - - - - - - - - 
+ 3|- - - - - - - - - - - - - - - 
+ 2|- - - - - - - - - - - - - - - 
+ 1|- - - - - - - - - - - - - - - 
+action: G11
+value: 0.266424
+policy: 
+network value: -0.183756
+predict win rate: 63.3212%
+
+Cost time: 2.15542

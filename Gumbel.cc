@@ -34,25 +34,23 @@ using namespace std;
 #define RED  "\033[31m" 
 //g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --human_play
 ////////////////////////////////
-//#define DEBUG
+// #define DEBUG
 // #define CHECK
 ///////////GUMBEL///////////////////////
-bool use_mixed_value = false;
+bool use_mixed_value = true;
+bool use_table = true;
 float GUMBEL_PENALTY = 1.0;
-int MAX_CONSIDERED_NUM = 16; //Top-k-Gumbel
+int MAX_CONSIDERED_NUM = 64; //Top-k-Gumbel -> 16 32 80 128
+int GUMBEL_SIMPLE = 1; //24:50 95:5
 /////////////////////////////////////////
-int EVALUATION_COUNT = 8; // expand node count
-int REPLAY_BUFFER_SIZE = 4096;//2048
-int noise_limit_step = 7;
-int THREAD_NUM = 10;
+int EVALUATION_COUNT = 200; // expand node count
+int REPLAY_BUFFER_SIZE = 4096;//4096 2048
 int EVALUATION_PLAY_COUNT = 40;
-double VIRTUAL_LOSS = 5.0;
-float C_PUCT {3.0}; // 4.0
-double EPS {1e-8};
-float frac = 0.25;
-float temp = 1.0;
 bool HUMAN_PLAY = false;
 int ITER;
+/////////////////////////////
+int ProcessCount = 8;
+int ProcessID = 0;
 ////////////////////////////////
 vector<int> common_pos_to_bitboard_pos = {
     1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15, 
@@ -141,7 +139,7 @@ void print_board(T& vec, char c){
     cout << endl;
     cout << 15 << "|";
     for(int i = 1; i <= 225; ++i){
-        if(vec[i - 1] > 0){
+        if(vec[i - 1] != 0){
             cout << c << " ";
         }
         else{
@@ -177,25 +175,32 @@ struct Network{
     vector<float> policies;
     float value;
 };
-
+unordered_map<string, Network> table;
 Network predict(BitBoard my, BitBoard opp, cppflow::model& model){   
     vector<int> board(15 * 15 * 2, 1);
+    string board_str(15 * 15 * 2, '1');
     uint64_t pos;
     while(my){
         pos = my.ls1b();
         board[bitboard_pos_to_common_pos[pos] * 2] = 0;
+        board_str[bitboard_pos_to_common_pos[pos] * 2] = '0';
     }
     while(opp){
         pos = opp.ls1b();
         board[bitboard_pos_to_common_pos[pos] * 2 + 1] = 0;
+        board_str[bitboard_pos_to_common_pos[pos] * 2 + 1] = '0';
     }
+    if (use_table && table.count(board_str)) return table[board_str];
     auto TF_vec = cppflow::tensor(board, {15,15,2});
-    auto TF_input = cppflow::cast(TF_vec, TF_UINT8, TF_FLOAT);
+    auto TF_input = cppflow::cast(TF_vec, TF_UINT8, TF_FLOAT);    
     TF_input = cppflow::expand_dims(TF_input, 0);
 
     //katago
     auto output = model({{"serving_default_input_1:0", TF_input}},{"StatefulPartitionedCall:0", "StatefulPartitionedCall:1","StatefulPartitionedCall:2"});
-    
+    if (use_table) {
+        table[board_str] = {output[0].get_data<float>(), output[2].get_data<float>()[0]};
+        return table[board_str];
+    }
     return {output[0].get_data<float>(), output[2].get_data<float>()[0]};
 }
 
@@ -244,10 +249,10 @@ bool Node::expanded(){
 }
 
 float Node::qvalue(){
-    if(visit_count == 0.0){
-        return 0.0;
-    }
-    return reward == 0 ? (raw_value) : reward;
+    // if(visit_count == 0.0){
+    //     return 0.0;
+    // }
+    return reward == 0 ? (raw_value) : reward / visit_count;// / visit_count;
     //return (-1 * raw_value + reward);
 }
 
@@ -261,7 +266,7 @@ void Node::PrintTree(uint64_t pos = 0, string pre_output = "", bool isLast = tru
      int count = 2;
     if (isLast) {
         cout << "└── " << "action:" << Output(pos); 
-        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
+        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", qvalue:" << node->qvalue() << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
         /*
         cout << ", child: [";
         for(auto& child: node->children){
@@ -276,7 +281,7 @@ void Node::PrintTree(uint64_t pos = 0, string pre_output = "", bool isLast = tru
     }
     else {
         cout << "├── " << "action:" << Output(pos); 
-        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", reward:" << node->reward << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
+        cout << ", level:" << node->level << ", to_play:" << node->to_play << ", n:" << node->visit_count << ", qvalue:" << node->qvalue() << ", policy:" << node->prior <<  ", g:" << node->g << ", raw value:" << node->raw_value << ", completed qvalue:" << node->complete_qvalue;
         /*
         cout << ", child: [";
         for(auto& child: node->children){
@@ -294,11 +299,27 @@ void Node::PrintTree(uint64_t pos = 0, string pre_output = "", bool isLast = tru
     int cnt = node->children.size();
     for(auto child: node->children){
         //if(child->visit_count >= limit){
-        if(child->visit_count >= limit || child->level == 1){
+        //if(child->level == 1){
+        if(child->level == 1 || child->level == 2 || (child->level <= 3 && child->visit_count > 1)){
+        //if(child->visit_count >= limit || child->level == 1){
             child->PrintTree(child->action, pre_output+"   ", it == (cnt - 1), limit);
             it++;
         }
     }
+}
+
+void deleteTree(Node* root) {
+    if (root == nullptr) {
+        return;
+    }
+    
+    // 釋放所有子節點的記憶體
+    for (auto child : root->children) {
+        deleteTree(child);
+    }
+    
+    // 釋放根節點的記憶體
+    delete root;
 }
 
 class Game{
@@ -325,6 +346,8 @@ public:
     Game();
 
     void print();
+    void print_history();
+    void Undo();
 };
 
 Game::Game(): num_actions(225), SIZE(0){
@@ -393,39 +416,39 @@ vector<uint64_t> Game::legal_actions(BitBoard my, BitBoard opp, BitBoard moves, 
         }
     }
 
-    if(!threat_flag){//對方連5就檔
-        cTzone = oppTzone &  my & opp;
-        while(cTzone){
-            pos = cTzone.ls1b();
-            feat = feature(opp, my, pos);
-            s_h = state[_pext_u64(feat, pext_h)];
-            s_b = state[_pext_u64(feat, pext_b)];
-            s_v = state[_pext_u64(feat, pext_v)];
-            s_s = state[_pext_u64(feat, pext_s)];
-            if((s_h | s_b | s_v | s_s) & 0x80000){ //L5
-                actions.push_back(pos);
-                threat_flag = true;
-                break;
-            }
-        }
-    }
+    // if(!threat_flag){//對方連5就檔
+    //     cTzone = oppTzone &  my & opp;
+    //     while(cTzone){
+    //         pos = cTzone.ls1b();
+    //         feat = feature(opp, my, pos);
+    //         s_h = state[_pext_u64(feat, pext_h)];
+    //         s_b = state[_pext_u64(feat, pext_b)];
+    //         s_v = state[_pext_u64(feat, pext_v)];
+    //         s_s = state[_pext_u64(feat, pext_s)];
+    //         if((s_h | s_b | s_v | s_s) & 0x80000){ //L5
+    //             actions.push_back(pos);
+    //             threat_flag = true;
+    //             break;
+    //         }
+    //     }
+    // }
 
-    if(!threat_flag){//我方可連四
-        cTzone = myTzone & my & opp;;
-        while(cTzone){
-            pos = cTzone.ls1b();
-            feat = feature(my, opp, pos);
-            s_h = state[_pext_u64(feat, pext_h)];
-            s_b = state[_pext_u64(feat, pext_b)];
-            s_v = state[_pext_u64(feat, pext_v)];
-            s_s = state[_pext_u64(feat, pext_s)];
-            if((s_h | s_b | s_v | s_s) & 0xC0000){ //L5, L4
-                actions.push_back(pos);
-                threat_flag = true;
-                break;
-            }
-        }
-    }
+    // if(!threat_flag){//我方可連四
+    //     cTzone = myTzone & my & opp;;
+    //     while(cTzone){
+    //         pos = cTzone.ls1b();
+    //         feat = feature(my, opp, pos);
+    //         s_h = state[_pext_u64(feat, pext_h)];
+    //         s_b = state[_pext_u64(feat, pext_b)];
+    //         s_v = state[_pext_u64(feat, pext_v)];
+    //         s_s = state[_pext_u64(feat, pext_s)];
+    //         if((s_h | s_b | s_v | s_s) & 0xC0000){ //L5, L4
+    //             actions.push_back(pos);
+    //             threat_flag = true;
+    //             break;
+    //         }
+    //     }
+    // }
 
     if(!threat_flag){
         BitBoard mov = my & opp;
@@ -445,7 +468,7 @@ vector<uint64_t> Game::legal_actions(BitBoard my, BitBoard opp, BitBoard moves, 
         opp.print();
         cout << endl;
         cout << "legal_actions(): Action size is Zero!!!" << endl;
-        exit(1);
+        //exit(1);
     }
     return actions;
 }
@@ -462,12 +485,13 @@ void Game::apply(uint64_t pos){
 void Game::store_search_statistics(Node* root){
     float max_q_value = -100000.0;
     vector<float> child_logits_add_completed_q_value(225, 0.0);
-    max_q_value = -1 * root->qvalue() / root->visit_count;
+    max_q_value = root->children[0]->qvalue(); // -1 * root->qvalue();
     for(auto& child: root->children){
         child_logits_add_completed_q_value[bitboard_pos_to_common_pos[child->action]] = child->prior + child->complete_qvalue;
     } 
     //child_logits_add_completed_q_value = softmax(child_logits_add_completed_q_value);
     child_values.push_back(max_q_value);
+    //cout << max_q_value << endl;
     child_polices.push_back(child_logits_add_completed_q_value);
     return;
 }
@@ -560,7 +584,19 @@ int Game::to_play(){
 int Game::to_size(){
     return SIZE;
 }
-
+void Game::Undo() {
+    if (SIZE <= 0) return;
+    SIZE -= 1;
+    history[SIZE] = -1;
+}
+void Game::print_history() {
+    cout << "History : [";
+    for(int i = 0; i < SIZE; ++i) {
+        cout << Output(history[i]) << ", ";
+    }
+    cout << "]" << endl;
+    return;
+}
 void Game::print(){
     BitBoard black; black.init();
     BitBoard white; white.init();
@@ -628,6 +664,7 @@ void Game::print(){
 
 float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
     Network network_output = predict(node->my, node->opp, model);
+    //print_1d_vec(network_output.policies);
     node->to_play = game->to_play();
     vector<uint64_t> legal_actions = game->legal_actions(node->my, node->opp, node->move, node->myTzone, node->oppTzone);
     float policy_sum = 0.0;
@@ -648,6 +685,7 @@ float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
         assert(network_output.value != 0);
     }
     #endif
+
     float max_logit = *max_element(network_output.policies.begin(), network_output.policies.end());
     float min_logit = -std::numeric_limits<float>::max();
     vector<float> policies(225, min_logit);
@@ -697,7 +735,7 @@ vector<float>  complete_qvalues(const vector<float>& visited_counts, const vecto
     return completed_qvalues;
 }
 
-vector<float> rescale_qvalues(const vector<float>& qvalues, float epsilon, float visit_scale, float value_scale) {
+vector<float> rescale_qvalues(const vector<float>& qvalues,const float epsilon,const float visit_scale,const float value_scale) {
     std::vector<float> rescaled_qvalues(qvalues.size());
     auto min_value = *min_element(qvalues.begin(), qvalues.end());
     auto max_value = *max_element(qvalues.begin(), qvalues.end());
@@ -725,7 +763,7 @@ float compute_mixed_value(const float& raw_value,const vector<float>& qvalues,co
 
         // Summing the probabilities of the visited actions.
         // sum_probs = jnp.sum(jnp.where(visit_counts > 0, prior_probs, 0.0), axis=-1)
-        sum_probs += visit_counts[i] > 0 ? none_zero_prior_probs[i] : 0;
+        sum_probs += visit_counts[i] > 0 ? none_zero_prior_probs[i] : 0.0;
     }
     
     // weighted_q = jnp.sum(jnp.where(
@@ -738,7 +776,7 @@ float compute_mixed_value(const float& raw_value,const vector<float>& qvalues,co
         weighted_q += visit_counts[i] > 0.0 ? none_zero_prior_probs[i] * qvalues[i] / sum_prob : 0.0;
     }
     
-    return (-1.0 * raw_value + sum_visit_counts * weighted_q) / (sum_visit_counts + 1.0);
+    return (raw_value + sum_visit_counts * weighted_q) / (sum_visit_counts + 1.0);
 }
 
 vector<float>  qtransform(Node* node){
@@ -797,6 +835,7 @@ Node* select_child(Node* node, uint64_t& action){
     #endif
     vector<float> probs(n);
     for (int i = 0; i < n; ++i) {
+        node->children[i]->complete_qvalue = completed_qvalues[i];
         probs[i] = completed_qvalues[i] + node->children[i]->prior;
         visited_counts[i] = node->children[i]->visit_count;
     }
@@ -844,11 +883,34 @@ vector<float> GenerateGumbelNoise(int shape) { //ok
     return gumbel_noise;
 }
 
-void add_Gumbel_noise(vector<Node*>& children) { //ok
+// void add_Gumbel_noise(vector<Node*>& children) { //ok
+//     float min_prior = numeric_limits<float>::max();
+//     float max_prior = numeric_limits<float>::lowest();
+//     for (auto& child : children) {
+//         min_prior = min(min_prior, child->prior);
+//         max_prior = max(max_prior, child->prior);
+//     }
+
+//     int shape = children.size();
+//     vector<float> gumbel_noise = GenerateGumbelNoise(shape);
+//     gumbel_noise = softmax(gumbel_noise);
+//     for (int i = 0; i < shape; ++i) {
+//         children[i]->g = (gumbel_noise[i] * (max_prior - min_prior) + min_prior) * GUMBEL_PENALTY;
+//     }
+//     return;
+// }
+
+void add_Gumbel_noise(vector<Node*>& children, float count) { //ok
     int shape = children.size();
-    vector<float> gumbel_noise = GenerateGumbelNoise(shape);
+    for (int j = 0; j < count; ++j) {
+        vector<float> gumbel_noise = GenerateGumbelNoise(shape);
+        for (int i = 0; i < shape; ++i) {
+            children[i]->g += gumbel_noise[i];
+        }
+    }
+    
     for (int i = 0; i < shape; ++i) {
-        children[i]->g = gumbel_noise[i] * GUMBEL_PENALTY;
+        children[i]->g = children[i]->g / count * GUMBEL_PENALTY;
     }
     return;
 }
@@ -861,7 +923,7 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
 
 	root->raw_value = expand_node(root, game, model);
     
-	add_Gumbel_noise(root->children); //添加Gumbel noise
+	add_Gumbel_noise(root->children, GUMBEL_SIMPLE); //添加Gumbel noise
     
 	int num_valid_actions = root->children.size();
     num_valid_actions = min(num_valid_actions, num_simulations); //ok
@@ -971,6 +1033,9 @@ Node* seq_halving(Game* game, cppflow::model& model, uint64_t& selected_action,c
 }
 
 Game* play_game(cppflow::model& model){
+    #ifdef DEBUG
+        HUMAN_PLAY = true;
+    #endif
     Game* game = new Game();
     vector<BitBoard> board_info;
     uint64_t action = 1000;
@@ -982,20 +1047,29 @@ Game* play_game(cppflow::model& model){
         #ifdef DEBUG
             root->PrintTree(0, "", false, 10);
             game->print();//self play
-            cout << "action: " << Output(action) << endl;
-            cout << "value: " <<  game->child_values.back() << endl;
-            cout << "policy: " << endl;
-            print_1d_vec(game->child_polices.back());
-            cout << "network value: " << root->raw_value << endl;
-            cout << "predict win rate: " << (1 + game->child_values.back()) / 2 * 100 << "%" << endl << endl;
+            //cout << "action: " << Output(action) << endl;
+            //cout << "value: " <<  game->child_values.back() << endl;
+            //cout << "policy: " << endl;
+            //print_1d_vec(game->child_polices.back());
+            //cout << "network value: " << root->raw_value << endl;
+            //cout << "predict win rate: " << (1 + game->child_values.back()) / 2 * 100 << "%" << endl << endl;
         #endif
         board_info = game->make_bitboard(-1);
-        //delete root;
+        deleteTree(root);
     }
     return game;
 }
 
 void self_play(cppflow::model& model){
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    string ltm_mon = (1 + ltm->tm_mon) < 10 ? "0" + to_string(1 + ltm->tm_mon) : to_string(1 + ltm->tm_mon);
+    string ltm_mday = ltm->tm_mday < 10 ? "0" + to_string(ltm->tm_mday) : to_string(ltm->tm_mday);
+    string ltm_hour = ltm->tm_hour < 10 ? "0" + to_string(ltm->tm_hour) : to_string(ltm->tm_hour);
+    string ltm_min = ltm->tm_min < 10 ? "0" + to_string(ltm->tm_min) : to_string(ltm->tm_min);
+    string ltm_sec = ltm->tm_sec < 10 ? "0" + to_string(ltm->tm_sec) : to_string(ltm->tm_sec);
+    string now_time = to_string(1900 + ltm->tm_year) +ltm_mon + ltm_mday + ltm_hour + ltm_min + ltm_sec;
+    
     cout << "Start Self Play" << endl;
     vector<vector<int>> board_history;
     vector<vector<float>> policies_history;
@@ -1008,29 +1082,40 @@ void self_play(cppflow::model& model){
         int auxiliary_policies_history_start_idx = policies_history.size();
         double end = omp_get_wtime();
         int winner = (game->SIZE - 1) % 2 == 0 ? 0 : 1;
-        cout << round << ": Board Size: " << setw(5) << game->SIZE << ": total cost time: " << setw(6) << setprecision(3) << (end-start) / 60.0 << " min, avg step time: " << setw(3) << setprecision(3) << (end - start) / double(board_history.size() + game->SIZE) << " s, " << " Winner is " << winner << "." << endl;
+        if (ProcessID != 0) {
+            cout << "[ProcessID: " << ProcessID << "] " << setw(2) << round << ": Total Size: " << setw(3) << board_history.size() + game->SIZE << ": Board Size: " << setw(3) << game->SIZE << ": total cost time: " << setw(4) << setprecision(3) << (end-start) / 60.0 << " min, avg step time: " << setw(3) << setprecision(3) << (end - start) / double(board_history.size() + game->SIZE) << " s, " << " Winner is " << winner << "." << endl;
+            // cout << "[ProcessID: " << ProcessID << "] " << round << ": Board Size: " << setw(5) << game->SIZE << ": total cost time: " << setw(6) << setprecision(3) << (end-start) / 60.0 << " min, avg step time: " << setw(3) << setprecision(3) << (end - start) / double(board_history.size() + game->SIZE) << " s, " << " Winner is " << winner << "." << endl;
+        }
+        else {
+            cout << round << ": Board Size: " << setw(5) << game->SIZE << ": total cost time: " << setw(6) << setprecision(3) << (end-start) / 60.0 << " min, avg step time: " << setw(3) << setprecision(3) << (end - start) / double(board_history.size() + game->SIZE) << " s, " << " Winner is " << winner << "." << endl;
+        }
         for(int i = 0; i < game->SIZE; ++i){//save training data
             if(board_history.size() == REPLAY_BUFFER_SIZE) break;
             vector<int> board_info(2*15*15);
             vector<vector<int>> board = game->make_image(i);
             if(i % 2 == 1){
+                // print_board(board[0], 'x');
+                // print_board(board[1], 'o');
                 std::copy(board[0].begin(), board[0].end(), board_info.begin());
                 std::copy(board[1].begin(), board[1].end(), board_info.begin() + board[0].size());
             }
             else{
+                // print_board(board[1], 'o');
+                // print_board(board[0], 'x');
                 std::copy(board[1].begin(), board[1].end(), board_info.begin());
                 std::copy(board[0].begin(), board[0].end(), board_info.begin() + board[1].size());
             }
             board_history.push_back(board_info);        
 
             policies_history.push_back(game->child_polices[i]);
-            
+            // print_board(game->child_polices[i], 'p');
             float value = i % 2 == winner ? 1.0 : -1.0;//！!！!
             #ifdef DEBUG
                 cout << value << " " << game->child_values[i] << endl;
             #endif
+            if (game->SIZE >= 254) value_history.push_back(0);
+            else value_history.push_back((value + game->child_values[i]) / 2.0);
             // cout << value << " " << game->child_values[i] << " " << (value + game->child_values[i]) / 2.0 << endl;
-            value_history.push_back((value + game->child_values[i]) / 2.0);
             //value_history.push_back(value);
             //value_history.push_back(value);
             // if (ITER <= 25) {
@@ -1066,18 +1151,11 @@ void self_play(cppflow::model& model){
     }
     */
     cout << board_history.size() << " " << policies_history.size() << " " << auxiliary_policies_history.size() << " " << value_history.size() << endl;
-    time_t now = time(0);
-    tm *ltm = localtime(&now);
-    string ltm_mon = (1 + ltm->tm_mon) < 10 ? "0" + to_string(1 + ltm->tm_mon) : to_string(1 + ltm->tm_mon);
-    string ltm_mday = ltm->tm_mday < 10 ? "0" + to_string(ltm->tm_mday) : to_string(ltm->tm_mday);
-    string ltm_hour = ltm->tm_hour < 10 ? "0" + to_string(ltm->tm_hour) : to_string(ltm->tm_hour);
-    string ltm_min = ltm->tm_min < 10 ? "0" + to_string(ltm->tm_min) : to_string(ltm->tm_min);
-    string ltm_sec = ltm->tm_sec < 10 ? "0" + to_string(ltm->tm_sec) : to_string(ltm->tm_sec);
-    string now_time = to_string(1900 + ltm->tm_year) +ltm_mon + ltm_mday + ltm_hour + ltm_min + ltm_sec;
-    write_2D_vector_to_file(policies_history, "./train_data/policies/" + now_time + ".history");
-    write_2D_vector_to_file(policies_history, "./train_data/auxiliary_policies/" + now_time + ".history");
-    write_2D_vector_to_file(board_history, "./train_data/board/" + now_time + ".history");
-    write_1D_vector_to_file(value_history, "./train_data/value/" + now_time + ".history");
+    
+    write_2D_vector_to_file(policies_history, "./original_train_data/policies/" + now_time + ".history");
+    write_2D_vector_to_file(auxiliary_policies_history, "./original_train_data/auxiliary_policies/" + now_time + ".history");
+    write_2D_vector_to_file(board_history, "./original_train_data/board/" + now_time + ".history");
+    write_1D_vector_to_file(value_history, "./original_train_data/value/" + now_time + ".history");
 }
 
 void human_play(cppflow::model& model){
@@ -1090,22 +1168,29 @@ void human_play(cppflow::model& model){
     board_info = game->make_bitboard(-1);
     double start = omp_get_wtime();
     while(!game->terminal(board_info[1], board_info[0], action)){
-        char c = getchar();
+        char c;
+        cin >> c;
         int n;
-        if(c == '\n'){
+        if(c == 'p'){
             Node* root = seq_halving(game, model, action, board_info);
             #ifdef DEBUG
                 
             #endif
             sort(root->children.begin(), root->children.end(), [](const Node* a, const Node* b){return (a->visit_count == b->visit_count) ? ((a->g + a->prior + a->complete_qvalue) > (b->g + b->prior + b->complete_qvalue)) : (a->visit_count > b->visit_count);}); // 根據q value進行排序
-            root->PrintTree(0, "", true);
+            //root->PrintTree(0, "", true);
             game->store_search_statistics(root);
             //delete root;
             game->apply(action);
             game->print();//human play
+            game->print_history();
             cout << "action: " << Output(action) << endl;
             cout << game->child_values.back() << endl;
             cout << "predict win rate: " << (game->child_values.back() + 1) / 2 * 100 << "%" << endl << endl;
+        }
+        else if (c == 'u') {
+            game->Undo();
+            game->print();
+            game->print_history();
         }
         else{
             cin >> n;
@@ -1115,6 +1200,7 @@ void human_play(cppflow::model& model){
                 cout << "Play action: " << action << endl; 
                 game->apply(action);
                 game->print();//human play
+                game->print_history();
                 cout << "action: " << Output(action) << endl;
             }
             else{
@@ -1126,8 +1212,9 @@ void human_play(cppflow::model& model){
                 //delete root;
                 game->apply(action);
                 game->print();//human play
+                game->print_history();
                 cout << "action: " << Output(action) << endl;
-                cout << "predict win rate: " << (1 + (-1 * game->child_values.back())) / 2 * 100 << "%" << endl << endl;
+                cout << "predict win rate: " << (1 + game->child_values.back()) / 2 * 100 << "%" << endl << endl;
             }
         }
         board_info = game->make_bitboard(-1);
@@ -1146,7 +1233,7 @@ void evaluation(cppflow::model& curr_model, cppflow::model& pre_model){
     int cur_win = 0;
 
     for(int i = 1; i <= EVALUATION_PLAY_COUNT; ++i){
-        cout << "Round " << i << ": " << endl; 
+        cout << "Round " << dec << i << ": " << endl; 
         curr_player = i <= (EVALUATION_PLAY_COUNT / 2) ? 0 : 1;
         Game* game = new Game();
         vector<BitBoard> board_info;
@@ -1154,10 +1241,13 @@ void evaluation(cppflow::model& curr_model, cppflow::model& pre_model){
         board_info = game->make_bitboard(-1);
         while(!game->terminal(board_info[1], board_info[0], action)){
             Node* root;
+            //GUMBEL_PENALTY *= 0.7;
             if(game->SIZE % 2 == curr_player){
+                // MAX_CONSIDERED_NUM = 32;
                 root = seq_halving(game, curr_model, action, board_info);
             }
             else{
+                // MAX_CONSIDERED_NUM = 64;
                 root = seq_halving(game, pre_model, action, board_info);
             }
             game->apply(action);
@@ -1174,10 +1264,14 @@ void evaluation(cppflow::model& curr_model, cppflow::model& pre_model){
             cout << "predict win rate: " << (1 + game->child_values.back()) / 2 * 100 << "%" << endl << endl;
             #endif
             board_info = game->make_bitboard(-1);
-            //delete root;
+            deleteTree(root);
         }
         game->print();//evaluation
-        if((game->SIZE - 1) % 2 == curr_player){
+        if (game->SIZE >= 224) {
+            cout << "Draw" << endl;
+            cur_win += 0.5;
+        }
+        else if((game->SIZE - 1) % 2 == curr_player){
             cout << "New model win." << endl;
             cur_win++;
         }
@@ -1207,27 +1301,57 @@ int main(int argc, char* argv[]){
 
     ITER = stoi(string(argv[2]));
     cout << ITER << " iter start." << endl;
-
+    ProcessID = stoi(string(argv[3]));
+    cout << "Process  " << ProcessID << " start." << endl;
+    if (ProcessID != 0) {
+        REPLAY_BUFFER_SIZE /= ProcessCount;
+    }
+    cout << "REPLAY_BUFFER_SIZE: " << REPLAY_BUFFER_SIZE << endl;
     if(string(argv[1]) == "--self_play"){
+        // if (ITER <= 20) GUMBEL_SIMPLE = 50;
+        // else if (ITER <= 50) GUMBEL_SIMPLE = 30;
+        // else if (ITER <= 70) GUMBEL_SIMPLE = 20;
+        // else if (ITER <= 80) GUMBEL_SIMPLE = 10;
+        // else GUMBEL_SIMPLE = 5;
+        cout << "Gumble simple: " << GUMBEL_SIMPLE << endl;
         // cppflow::model c_model("./save_model/model1");
         // self_play(c_model);
         self_play(model);
+        cout << "Table size: " << table.size() << ":" << EVALUATION_COUNT * REPLAY_BUFFER_SIZE << endl;
+        cout << "Process " << ProcessID << " Finish." << endl; 
     }
     else if(string(argv[1]) == "--evaluation"){
-        GUMBEL_PENALTY = 0.3;
+        use_table = false;
+        if (ITER <= 20) GUMBEL_SIMPLE = 70;
+        else if (ITER <= 50) GUMBEL_SIMPLE = 50;
+        else if (ITER <= 70) GUMBEL_SIMPLE = 40;
+        else if (ITER <= 80) GUMBEL_SIMPLE = 30;
+        else GUMBEL_SIMPLE = 10;
+        cout << "Gumble simple: " << GUMBEL_SIMPLE << endl;
+
         EVALUATION_COUNT = 200;
-        // cppflow::model p_model("./p_model");
-        // evaluation(model, p_model);
-        cppflow::model p_model("./save_model/model10");
-        cppflow::model c_model("./save_model/model20");
-        evaluation(c_model, p_model);
+        cppflow::model p_model("./p_model");
+        evaluation(model, p_model);
+
+        // GUMBEL_SIMPLE = 10;
+        // EVALUATION_COUNT = 200;
+        // int MAX_CONSIDERED_NUM = 80;
+        // // cppflow::model p_model("./gumbel32_200/save_model/model160");
+        // // cppflow::model c_model("./gumbel64_200/save_model/model160");
+        // cppflow::model p_model("./save_model/model1");
+        // cppflow::model c_model("./save_model/model10");
+        // evaluation(c_model, p_model);
         
     }
     else if(string(argv[1]) == "--human_play"){
-        GUMBEL_PENALTY = 0.1;
-        EVALUATION_COUNT = 100;
-        //cppflow::model p_model("./model100");
-        cppflow::model p_model("./c_model");
+        //GUMBEL_PENALTY = 0.1;
+        EVALUATION_COUNT = 200;
+        MAX_CONSIDERED_NUM = 64; //Top-k-Gumbel
+        GUMBEL_SIMPLE = 1;
+        use_mixed_value = true;
+        //cppflow::model p_model("./save_model/model1");
+        //cppflow::model p_model("./gumbel64_200/save_model/model160");
+        cppflow::model p_model("./p_model");
         human_play(p_model);
     }
     

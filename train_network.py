@@ -1,395 +1,284 @@
-#from DN_5 import DN
-#from DN_10 import DN
 from dn5 import DN
+#from dn10 import DN
 import tensorflow as tf
 from tensorflow.keras.callbacks import LearningRateScheduler, LambdaCallback
-#from tensorflow.keras.losses import CategoricalCrossentropy, MeanSquaredError
-from tensorflow.keras.losses import KLDivergence, MeanSquaredError
+from tensorflow.keras.losses import CategoricalCrossentropy, MeanSquaredError, KLDivergence
 from tensorflow.keras.models import load_model
-from tensorflow.keras.regularizers import L2
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.layers import Softmax
 from tensorflow.keras import backend as K
-from pathlib import Path
+
+import keras.backend as K
+from keras.callbacks import Callback
+from keras.layers import BatchNormalization
+from callback import create_swa_callback_class
+
 import numpy as np
+from datetime import datetime
+from pathlib import Path
 import pickle
 import os
 import time
-RN_EPOCHS = 10 #訓練次數
-'''
-step 1:load data(history)
+import sys
+from utils import *
+args = dotdict({
+    'process_num' : 8,
+    'simulation_count' : 4096,
+    #path
+    'original_data_path' : './original_train_data',
+    'original_file_type' : '*.history',
+    'rotated_data_path' : './rotated_train_data',
+    'rotated_file_type' : '*.npy',
+    #training data sampling
+    'sampling_freq' : 16, 
+    'replay_buffer_size' : 40960 * 16, #40960 * 16
+    #sliding window
+    'start_window_idx' : 4,
+    #SVG
+    'lr' : 0.1,
+    'momentum' : 0.9,
+    'decay' : 0.00003,
+    #method
+    'method' : 'gumbel',
+    'batch_size' : 2048,
+    'sampling_epoch_num' : 16,
+    'use_sample' : True,
+    #swa
+    'use_swa' : False,
+    'start_epoch' : 2, #must >= 2 從第二個開始
+    'swa_batch_size' : 2048 ,
+    'swa_freq' : 2, # must >=2 每兩個做一次swa
+    'swa_epoch_num' : 10, 
+})
 
-step 2:重塑訓練資料的shape
-dual network的輸入shape為（3,3,2）
-但這邊我們要一次專遞躲避訓練資料，因此要知其成為4軸陣列（訓練資料筆數,3,3,2） 本例要對500個訓練資料進行預測，所以重塑為(500,3,3,2)
-
-step 3:載入最佳玩家的模型
-將最佳玩家的模型作為訓練最新玩家模型的初始狀態
-雖然dual_network.py還處於未訓練狀態
-但一開始還是先將其載入作為最佳玩家，之後再將訓練後的模型輸出為最新玩家
-
-step 4:編譯模型 編譯模型時要制定loss func，optimizer，評估指標
-loss func：
-    策略為分類問題所以用 categorical_crossentropy
-    局勢價值為回歸問題所以用mse
-Optimizer：Adam
-評估指標：因為訓練dual network不會進行驗證，所以這裡先不用
-
-step 5:調整學習率 利用LearningRateScheduler
-預設為0.001，經過50步降為0.005 80步降為0.00025
-
-step 6:印出訓練次數
-利用callback輸出訓練次數
-
-step 7:進行訓練
-
-step 8:儲存最新玩家的模型
-'''
-def rotate(A):
-    B = np.copy(A)
-    B[:] = [[row[i] for row in B[::-1]] for i in range(len(B))]
-    return B
-
-def mirror(A):
-    B = np.copy(A)
-    return np.flip(B, axis = 1)
-
-def expand_xs_rotated_data(xs):
-    mirror_xs = []
-    for board_2 in xs:
-        mirror_board_2 = []
-        for board in board_2:
-            mirror_board = mirror(board)
-            mirror_board_2.append(mirror_board)
-        mirror_xs.append(mirror_board_2)
-    mirror_xs = np.array(mirror_xs)
-
-    rotate_90 = []
-    for board_2 in xs:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        rotate_90.append(rotate_board_2)
-    rotate_90 = np.array(rotate_90)
-
-    rotate_180 = []
-    for board_2 in rotate_90:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        rotate_180.append(rotate_board_2)
-    rotate_180 = np.array(rotate_180)
-
-    rotate_270 = []
-    for board_2 in rotate_180:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        rotate_270.append(rotate_board_2)
-    rotate_270 = np.array(rotate_270)
-    
-    mirror_rotate_90 = []
-    for board_2 in mirror_xs:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        mirror_rotate_90.append(rotate_board_2)
-    mirror_rotate_90 = np.array(mirror_rotate_90)
-
-    mirror_rotate_180 = []
-    for board_2 in mirror_rotate_90:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        mirror_rotate_180.append(rotate_board_2)
-    mirror_rotate_180 = np.array(mirror_rotate_180)
-
-    mirror_rotate_270 = []
-    for board_2 in mirror_rotate_180:
-        rotate_board_2 = []
-        for board in board_2:
-            rotate_board = rotate(board)
-            rotate_board_2.append(rotate_board)
-        mirror_rotate_270.append(rotate_board_2)
-    mirror_rotate_270 = np.array(mirror_rotate_270)
-    
-    xs = np.concatenate([xs, rotate_90])
-    xs = np.concatenate([xs, rotate_180])
-    xs = np.concatenate([xs, rotate_270])
-    xs = np.concatenate([xs, mirror_xs])
-    xs = np.concatenate([xs, mirror_rotate_90])
-    xs = np.concatenate([xs, mirror_rotate_180])
-    xs = np.concatenate([xs, mirror_rotate_270])
-    return xs
-
-def expand_policy_rotated_data(policies):  
-    #print(policies[9],'\n')
-    
-    mirror_policies = []
-    for board in policies:
-        mirror_board = mirror(board)
-        mirror_policies.append(mirror_board)
-    mirror_policies = np.array(mirror_policies)
-    #print(mirror_policies[9], '\n')
-    
-    rotate_90 = []
-    for board in policies:
-        rotate_board = rotate(board)
-        rotate_90.append(rotate_board)
-    rotate_90 = np.array(rotate_90)
-    #print(rotate_90[9],'\n')
-
-    rotate_180 = []
-    for board in rotate_90:
-        rotate_board = rotate(board)
-        rotate_180.append(rotate_board)
-    rotate_180 = np.array(rotate_180)
-    #print(rotate_180[9],'\n')
-
-    rotate_270 = []
-    for board in rotate_180:
-        rotate_board = rotate(board)
-        rotate_270.append(rotate_board)
-    rotate_270 = np.array(rotate_270)
-    #print(rotate_270[9],'\n')
-    
-    mirror_rotate_90 = []
-    for board in mirror_policies:
-        rotate_board = rotate(board)
-        mirror_rotate_90.append(rotate_board)
-    mirror_rotate_90 = np.array(mirror_rotate_90)
-    #print(mirror_rotate_90[9],'\n')
-
-    mirror_rotate_180 = []
-    for board in mirror_rotate_90:
-        rotate_board = rotate(board)
-        mirror_rotate_180.append(rotate_board)
-    mirror_rotate_180 = np.array(mirror_rotate_180)
-    #print(mirror_rotate_180[9],'\n')
-
-    mirror_rotate_270 = []
-    for board in mirror_rotate_180:
-        rotate_board = rotate(board)
-        mirror_rotate_270.append(rotate_board)
-    mirror_rotate_270 = np.array(mirror_rotate_270)
-    #print(mirror_rotate_270[9],'\n')
-    
-    policies = np.concatenate([policies, rotate_90])
-    policies = np.concatenate([policies, rotate_180])
-    policies = np.concatenate([policies, rotate_270])
-    policies = np.concatenate([policies, mirror_policies])
-    policies = np.concatenate([policies, mirror_rotate_90])
-    policies = np.concatenate([policies, mirror_rotate_180])
-    policies = np.concatenate([policies, mirror_rotate_270])
-    return policies
-
-def expand_value_rotated_data(value):
-    copy_value = np.copy(value)
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    value = np.concatenate([value, copy_value])
-    return value
-    
 def MeanSquaredError_15(y_true, y_pred):
     return 1.5*MeanSquaredError()(y_true, y_pred)
 
-def KLDivergence_015(y_true, y_pred):
+def Soft_max_KLDivergence_015(y_true, y_pred):
     return 0.15*KLDivergence()(Softmax()(y_true), Softmax()(y_pred))
 
 def Soft_max_KLDivergence(y_true, y_pred):
     return KLDivergence()(Softmax()(y_true), Softmax()(y_pred))
 
-def drawlearning(history):
-    import matplotlib.pyplot as plt
-    print(history.history.keys())
-    # summarize history for accuracy
-    plt.plot(history.history['loss'])
-    #plt.plot(history.history['output_1_loss'])
-    #plt.plot(history.history['output_2_loss'])
-    #plt.plot(history.history['output_3_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['loss', 'policy loss','value loss'], loc='upper left') 
-    plt.show()
-    plt.savefig("lr_2.png")
+def MeanSquaredError_15(y_true, y_pred):
+    return 1.5*MeanSquaredError()(y_true, y_pred)
 
+def Soft_max_Crossentropy_015(y_true, y_pred):
+    return 0.15*CategoricalCrossentropy()(Softmax()(y_true), Softmax()(y_pred))
 
-dir = './train_data'
-def load_data(path,i): #載入self_play所儲存的history檔
-    history_path = sorted(Path(path).glob('*.history'))[i]
-    with history_path.open(mode = 'r') as f:
-        vec = f.readlines()
-        f.close()
-    
-    output_arr = []
-    for v in vec:
-        v = v.split(", ")
-        output_arr.append(v[:-1])
-    return output_arr
+def Soft_max_Crossentropy(y_true, y_pred):
+    return CategoricalCrossentropy()(Softmax()(y_true), Softmax()(y_pred))
 
-
-def del_hitory():
-    board_history_path = sorted(Path(dir + '/board').glob('*.history'))[0]
-    policies_history_path = sorted(Path(dir + '/policies').glob('*.history'))[0]
-    auxiliary_policies_history_path = sorted(Path(dir + '/auxiliary_policies').glob('*.history'))[0]
-    value_history_path = sorted(Path(dir + '/value').glob('*.history'))[0]
-    
-    os.remove(board_history_path)
-    os.remove(policies_history_path)
-    os.remove(auxiliary_policies_history_path)
-    os.remove(value_history_path)
-
-def train_network():
-    #step 1 載入訓練資料
-    if(len(os.listdir(dir + '/board')) == len(os.listdir(dir + '/policies')) and len(os.listdir(dir + '/policies')) == len(os.listdir(dir + '/auxiliary_policies')) and len(os.listdir(dir + '/auxiliary_policies')) == len(os.listdir(dir + '/value'))):
-        SIZE = len(os.listdir(dir + '/board'))
+def load_training_data(args):
+    print('Start loading training data....')
+    #load latest self-play data
+    if(len(os.listdir(args.original_data_path + '/board')) == len(os.listdir(args.original_data_path + '/policies')) and len(os.listdir(args.original_data_path + '/policies')) == len(os.listdir(args.original_data_path + '/auxiliary_policies')) and len(os.listdir(args.original_data_path + '/auxiliary_policies')) == len(os.listdir(args.original_data_path + '/value'))):
+        original_data_size = len(os.listdir(args.original_data_path + '/board'))
     else:
-        print("file count has some problem.")
+        print("Original train data count has some problem.")
         exit()
+    print('Original train data file count is:', original_data_size , '/', args.process_num, '=', original_data_size / int(args.process_num))
+    if (original_data_size > 0):
+        original_boards = load_data(args.original_data_path + '/board', original_data_size, file_type = args.original_file_type)
+        original_policies = load_data(args.original_data_path + '/policies', original_data_size, file_type = args.original_file_type)
+        original_auxiliary_policies = load_data(args.original_data_path + '/auxiliary_policies', original_data_size, file_type = args.original_file_type)
+        original_values = load_data(args.original_data_path + '/value', original_data_size, file_type = args.original_file_type)
 
-    print('File count is:', SIZE)
-    boards = load_data(dir + '/board',0)
-    policies = load_data(dir + '/policies',0)
-    auxiliary_policies = load_data(dir + '/auxiliary_policies',0)
-    value = load_data(dir + '/value',0)[0]
-    
-    for i in range(1, SIZE):
-        boards += load_data(dir + '/board',i)
-        policies += load_data(dir + '/policies',i)
-        auxiliary_policies += load_data(dir + '/auxiliary_policies',i)
-        value += load_data(dir + '/value',i)[0]
-    
-    
-    # #step 2:重塑訓練資料的shape
-    xs = np.array(boards).reshape(len(boards), 2, 15, 15)
-    y_policies = np.array(policies).reshape(len(policies), 15, 15)
-    y_next_policies = np.array(auxiliary_policies).reshape(len(auxiliary_policies), 15, 15)
-    y_values = np.array(value)
+        #reshape data
+        original_boards = np.array(original_boards).reshape(len(original_boards), 2, 15, 15)
+        original_policies = np.array(original_policies).reshape(len(original_policies), 15, 15)
+        original_auxiliary_policies = np.array(original_auxiliary_policies).reshape(len(original_auxiliary_policies), 15, 15)
+        original_values = np.array(original_values)
+        print('Original train data shape: ')
+        print(original_boards.shape, original_policies.shape, original_auxiliary_policies.shape, original_values.shape)
+        
+        #expand data
+        print('Start expand original training data.')
+        st = time.time()
+        expand_boards = expand_board_rotated_data(original_boards)
+        expand_policies = expand_policy_rotated_data(original_policies)
+        expand_auxiliary_policies = expand_policy_rotated_data(original_auxiliary_policies)
+        expand_values = expand_value_rotated_data(original_values)
+        ed = time.time()
+        print('Expand data completed.\nCost time:', ed - st)
 
-    print(xs.shape, y_policies.shape, y_next_policies.shape, y_values.shape)
-    start_time = time.time()
-    print("start expand data.")
-    xs = expand_xs_rotated_data(xs)
-    xs = xs.transpose(0,2,3,1).astype('float32')
-    
-    y_policies = expand_policy_rotated_data(y_policies)
-    y_policies = y_policies.reshape(len(y_policies), 15 * 15).astype('float32')
+    #load ex-expanded data
+    if(len(os.listdir(args.rotated_data_path + '/board')) == len(os.listdir(args.rotated_data_path + '/policies')) and len(os.listdir(args.rotated_data_path + '/policies')) == len(os.listdir(args.rotated_data_path + '/auxiliary_policies')) and len(os.listdir(args.rotated_data_path + '/auxiliary_policies')) == len(os.listdir(args.rotated_data_path + '/value'))):
+        rotated_data_size = len(os.listdir(args.rotated_data_path + '/board'))
+    else:
+        print("Rotated train data count has some problem.")
+        exit()
+    print('Rotated train data file count is:', rotated_data_size)
+    if (rotated_data_size > 0):
+        rotated_boards = load_data(args.rotated_data_path + '/board', rotated_data_size, file_type = args.rotated_file_type)
+        rotated_policies = load_data(args.rotated_data_path + '/policies', rotated_data_size, file_type = args.rotated_file_type)
+        rotated_auxiliary_policies = load_data(args.rotated_data_path + '/auxiliary_policies', rotated_data_size, file_type = args.rotated_file_type)
+        rotated_values = load_data(args.rotated_data_path + '/value', rotated_data_size, file_type = args.rotated_file_type)
 
-    y_next_policies = expand_policy_rotated_data(y_next_policies)
-    y_next_policies = y_next_policies.reshape(len(y_next_policies), 15 * 15).astype('float32')
-    
-    y_values = expand_value_rotated_data(y_values).astype('float32')
-    print(xs.shape, y_policies.shape, y_next_policies.shape, y_values.shape)
-    print("expand data complete.")
-    end_time = time.time()
-    print("Expand data time taken: ", end_time - start_time)
-    #step 3 載入最佳玩家的模型
-    #model = DN().model()
+    #combine latest self-play data and ex-data
+    if (original_data_size == 0 or rotated_data_size == 0):
+        if(original_data_size > 0 and rotated_data_size == 0):
+            y_boards = expand_boards
+            y_policies = expand_policies
+            y_next_policies = expand_auxiliary_policies
+            y_values = expand_values
+        elif(rotated_data_size > 0 or original_data_size == 0):
+            y_boards = rotated_boards
+            y_policies = rotated_policies
+            y_next_policies = rotated_auxiliary_policies
+            y_values = rotated_values
+        else:
+            print("Have not any training data file.")
+            exit()
+    else:
+        y_boards = np.concatenate([rotated_boards, expand_boards])
+        y_policies = np.concatenate([rotated_policies, expand_policies])
+        y_next_policies = np.concatenate([rotated_auxiliary_policies, expand_auxiliary_policies])
+        y_values = np.concatenate([rotated_values, expand_values])
+
+    #save 
+    if (original_data_size > 0):
+        print('Save expanded training data.')
+        now_time = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        np.save(args.rotated_data_path + '/board/' + now_time, expand_boards)
+        np.save(args.rotated_data_path + '/policies/' + now_time, expand_policies)
+        np.save(args.rotated_data_path + '/auxiliary_policies/' + now_time, expand_auxiliary_policies)
+        np.save(args.rotated_data_path + '/value/' + now_time, expand_values)
+
+        del_history(args.original_data_path, args.process_num)
+
+    print('Total training data: ', len(y_boards))
+    print(y_boards.shape, y_policies.shape, y_next_policies.shape, y_values.shape)
+    print('Loading training data completed....')
+    return y_boards, y_policies, y_next_policies, y_values
+
+def train_network(args, iter):
+    xs, y_policies, y_next_policies, y_values = load_training_data(args)
     model = DN()
     if(os.path.exists('./c_model/')):
         model.load_weights('./c_model/')
-        #model.load_weights('./c_model/latest.h5')
         print('loading best model')
     else:
         print('Can not load model')
         exit()
     
-    opt = Adam(learning_rate=1e-3)
-    model.compile(loss=[Soft_max_KLDivergence, KLDivergence_015, MeanSquaredError_15],optimizer='adam')
-    #model.compile(loss=['categorical_crossentropy',CategoricalCrossentropy_015,'mse'],optimizer=opt)
-    model.build(input_shape = (None,15,15,2))
+    opt = SGD( 
+        learning_rate=args.lr,
+        momentum=args.momentum,
+        decay=args.decay,
+    )
 
-    #print(model.summary())
-    '''
-    def step_decay(epoch):
-            x = 0.0001
-            if epoch >= 10: x = 0.00007
-            if epoch >= 15: x = 0.00005
-            return x
-    '''
-    '''
-    def step_decay(epoch):
-            x = 0.0001
-            if epoch >= 4: x = 0.00008
-            if epoch >= 8: x = 0.00006
-            if epoch >= 12: x = 0.00005
-            if epoch >= 16: x = 0.00004
-            return x
-    '''
-
-    def step_decay(epoch):
-            x = 0.0001
-            if epoch >= 4: x = 0.00008
-            if epoch >= 8: x = 0.00006
-            return x
-        
-    lr_decay = LearningRateScheduler(step_decay)
-
-    print_callback = LambdaCallback(
-                on_epoch_begin=lambda epoch,logs:
-                        print('\rTrain {}/{}'.format(epoch + 1,RN_EPOCHS), end=''))
+    if (args.method == 'katago'):
+        model.compile(loss=[Soft_max_Crossentropy, Soft_max_Crossentropy_015, MeanSquaredError_15],optimizer = opt)
+    elif (args.method == 'gumbel'):
+        model.compile(loss=[Soft_max_KLDivergence, Soft_max_KLDivergence_015, MeanSquaredError_15],optimizer = opt)
+    else:
+        print('Method error.')
+        exit()
     
-    his = model.fit(xs, [y_policies, y_next_policies, y_values], shuffle = True, batch_size=512, epochs=RN_EPOCHS, verbose=1, callbacks=[lr_decay, print_callback], workers=4)
-    #his = model.fit(xs, [y_policies, y_next_policies, y_values], shuffle = True, batch_size=512, epochs=RN_EPOCHS, verbose=1, callbacks=[print_callback], workers=4)
-    #his = model.fit(xs, [y_policies, y_next_policies, y_values], batch_size=512, epochs=RN_EPOCHS, callbacks=[print_callback], verbose=1, workers=4)
+    if args.use_swa == True:
+        print('use swa')
+        SWA = create_swa_callback_class(K, Callback, BatchNormalization)
+        callback = SWA(start_epoch=args.start_epoch, 
+                lr_schedule='cyclic', 
+                swa_lr=args.lr * 0.01,
+                swa_lr2=args.lr,
+                swa_freq=args.swa_freq,
+                batch_size=args.swa_batch_size, # needed when using batch norm
+                verbose=1)
+        epoch_num = args.swa_epoch_num
+    elif args.use_sample == True:
+        print('use sample')
+        epoch_num = 1
+        callback = LambdaCallback(
+                on_epoch_begin=lambda epoch,logs:
+                        print('\rTrain {}/{}'.format(epoch + 1, epoch_num), end=''))
+    else:
+        print('use normal')
+        epoch_num = args.swa_epoch_num
+        callback = LambdaCallback(
+                on_epoch_begin=lambda epoch,logs:
+                        print('\rTrain {}/{}'.format(epoch + 1, epoch_num), end=''))
+        
+    
+    model.build(input_shape = (None,15,15,2))
+    replay_buffer_current_size = xs.shape[0]
+    print('Current buffer size:', replay_buffer_current_size)
+    if args.use_swa == True:
+        his = model.fit(xs, [y_policies, y_next_policies, y_values], shuffle = True, batch_size=args.batch_size, epochs=epoch_num , verbose=1, callbacks=[callback], workers=4)
+    elif args.use_sample == True:
+        sampling_num = int(y_values.shape[0] / args.sampling_freq)
+        for i in range(args.sampling_epoch_num):
+            print('Sampling',i + 1,':')
+            idx = np.random.choice(replay_buffer_current_size, size=sampling_num, replace = False)
+            train_xs, train_y_policies, train_y_next_policies, train_y_values = xs[idx], y_policies[idx], y_next_policies[idx], y_values[idx]
+            his = model.fit(train_xs, [train_y_policies, train_y_next_policies, train_y_values], shuffle = True, batch_size=args.batch_size, epochs=epoch_num , verbose=1, callbacks=[callback], workers=4)
+    else:
+        his = model.fit(xs, [y_policies, y_next_policies, y_values], shuffle = True, batch_size=args.batch_size, epochs=epoch_num , verbose=1, callbacks=[callback], workers=4)
+    
     model.save_weights('./c_model/')
     model.save('./c_model/', save_format = 'tf')
+
+    if (iter % 5 == 0):
+        print("./save_model/", iter)
+        copy_dir(iter)
+
+    end_window_idx = (args.replay_buffer_size - args.start_window_idx * 8 * args.simulation_count) / (8 * args.simulation_count) * 2 + args.start_window_idx - 1
+    if (iter >= args.start_window_idx and iter <= end_window_idx and iter % 2 == 0):
+        del_history(args.rotated_data_path, count = 1, file_type = args.rotated_file_type)
+
+    if (y_values.shape[0] >= args.replay_buffer_size):
+        del_history(args.rotated_data_path, count = 1, file_type = args.rotated_file_type)
+    
     K.clear_session()
     del model
-    #drawlearning(his)
 
 def save_init_mode():
-    KataGo_model = DN()#.model()
-
-    #KataGo_model.compile(loss=[Soft_max_KLDivergence,KLDivergence_015,MeanSquaredError_15],optimizer='adam')
-    KataGo_model.build(input_shape = (None,15,15,2))
-    print(KataGo_model.summary())
+    model = DN()#.model()
+    model.build(input_shape = (None,15,15,2))
+    print(model.summary())
     
     x = np.array([0]*(2*15*15)).astype('float32')
     x = x.reshape(1,2,15,15).transpose(0,2,3,1).astype('float32')
-    # #利用模型的預測去取得'策略'與'局勢價值'
-    y = KataGo_model.predict(x,batch_size=1)
 
-    KataGo_model.save('./c_model/', save_format = 'tf')
-    KataGo_model.save_weights('./c_model/', save_format = 'tf')
-    #KataGo_model.save_weights('./c_model/latest.h5')
+    #利用模型的預測去取得'策略'與'局勢價值'
+    y = model.predict(x, batch_size=1)
+    model.save('./c_model/', save_format = 'tf')
+    model.save_weights('./c_model/', save_format = 'tf')
+    copy_dir(-1, './init_model/')
+    copy_dir(-1, './save_model/model1/')
+    copy_dir(-1, './p_model/')
     K.clear_session()
-    del KataGo_model
+    del model
+    
+def test_train():
+    train_data_size = 0
+    self_play_count = 0
+    end_window_idx = (args.replay_buffer_size - args.start_window_idx * 8 * args.simulation_count) / (8 * args.simulation_count) * 2 + args.start_window_idx - 1
+    for i in range(1, 100):
+        train_data_size += args.simulation_count * 8
+        self_play_count += 1
+        print(i, train_data_size, self_play_count)
+        if (i >= args.start_window_idx and i <= end_window_idx and i % 2 == 0):
+            train_data_size -= args.simulation_count * 8
+            self_play_count -= 1
+
+        if (train_data_size >= args.replay_buffer_size):
+            train_data_size -= args.simulation_count * 8
+            self_play_count -= 1
+    print(args.replay_buffer_size)
 
 if __name__ == '__main__':
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
-    
+    iter = int(sys.argv[1])
+    st = time.time()
+    #test_train()
+    print(iter, 'training start')
+    train_network(args, iter)
+    # save_init_mode()
+    #del_all_history(args.original_data_path, args.original_file_type)
+    #del_all_history(args.rotated_data_path, args.rotated_file_type)
+    ed = time.time()
+    print('Training cost time:',ed - st)
 
-    start_time = time.time()
 
-    #save_init_mode()
-    train_network()
-    '''
-    del_hitory()
-    for i in range(19):
-        del_hitory()
-    '''
-    end_time = time.time()
-
-    print("Time taken: ", end_time - start_time)
-    
+        
