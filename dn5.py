@@ -7,7 +7,6 @@
 # Size of source mod 2**32: 6707 bytes
 from tensorflow.keras.layers import Activation, Flatten, BatchNormalization, Conv2D, Dense, GlobalAveragePooling2D, GlobalMaxPooling2D, Input, Layer, Concatenate, Add
 from tensorflow.keras.models import Model
-from tensorflow.keras.regularizers import L2
 import tensorflow as tf
 DN_FILTERS = 64
 DN_RESIDUA_NUM = 16
@@ -18,10 +17,10 @@ class GlobalPoolingBlock(Layer):
 
     def __init__(self, DN_FILTERS):
         super(GlobalPoolingBlock, self).__init__()
-        self.conv = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
-        self.conv1 = Conv2D((int(DN_FILTERS / 4)), kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
-        self.conv2 = Conv2D((DN_FILTERS - int(DN_FILTERS / 4)), kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
-        self.conv3 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
+        self.conv1 = Conv2D((int(DN_FILTERS / 4)), kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
+        self.conv2 = Conv2D((DN_FILTERS - int(DN_FILTERS / 4)), kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
+        self.conv3 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
         self.bn = BatchNormalization()
         self.bn1 = BatchNormalization()
         self.bn2 = BatchNormalization()
@@ -63,10 +62,10 @@ class ResBlock(Layer):
 
     def __init__(self, DN_FILTERS):
         super(ResBlock, self).__init__()
-        self.conv1 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv1 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
         self.bn1 = BatchNormalization()
         self.relu1 = Activation('relu')
-        self.conv2 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv2 = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
         self.bn2 = BatchNormalization()
         self.relu2 = Activation('relu')
 
@@ -87,9 +86,9 @@ class Policyhead(Layer):
 
     def __init__(self, C_head):
         super(Policyhead, self).__init__()
-        self.conv_p = Conv2D(C_head, kernel_size=1, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
-        self.conv_g = Conv2D(C_head, kernel_size=1, padding='same', use_bias=True, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
-        self.conv = Conv2D(2, kernel_size=1, padding='same', use_bias=True, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv_p = Conv2D(C_head, kernel_size=1, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
+        self.conv_g = Conv2D(C_head, kernel_size=1, padding='same', use_bias=True, kernel_initializer='TruncatedNormal', )
+        self.conv = Conv2D(2, kernel_size=1, padding='same', use_bias=False, kernel_initializer='TruncatedNormal', )
         self.bn = BatchNormalization()
         self.bn_g = BatchNormalization()
         self.bn_p = BatchNormalization()
@@ -128,14 +127,14 @@ class Valuehead(Layer):
 
     def __init__(self, C_head, C_value):
         super(Valuehead, self).__init__()
-        self.conv2 = Conv2D(C_head, kernel_size=1, padding='same', use_bias=True, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)))
+        self.conv2 = Conv2D(C_head, kernel_size=1, padding='same', use_bias=True, kernel_initializer='TruncatedNormal', )
         
         self.relu2 = Activation('relu')
 
         self.averagepool = GlobalAveragePooling2D()
 
-        self.fully_connect1 = Dense(C_value, kernel_regularizer=(L2(0.0005)), activation='relu', name='v')
-        self.fully_connect2 = Dense(1, kernel_regularizer=(L2(0.0005)), activation='tanh', name='v')
+        self.fully_connect1 = Dense(C_value,  activation='relu', name='v')
+        self.fully_connect2 = Dense(1,  activation='tanh', name='v')
 
     def call(self, input_tensor, training=None):
         x = self.conv2(input_tensor)
@@ -162,7 +161,7 @@ class DN(Model):
         self.value_head = Valuehead(18, 27)
         self.flatten1 = Flatten(name='my_policy')
         self.flatten2 = Flatten(name='emeny_policy')
-        self.conv = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='he_normal', kernel_regularizer=(L2(0.0005)), name='input')
+        self.conv = Conv2D(DN_FILTERS, kernel_size=3, padding='same', use_bias=False, kernel_initializer='TruncatedNormal',  name='input')
         self.bn = BatchNormalization(name='BN')
         self.relu = Activation('relu', name='relu')
         #self.my_policy = Activation('softmax', name='my_policy')

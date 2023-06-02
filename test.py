@@ -1,194 +1,26 @@
-import logging
-import os
-import sys
-from collections import deque
-from pickle import Pickler, Unpickler
-from random import shuffle
+pos = [
+    -1,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14, 
+    -1,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29, 
+    -1,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44, 
+    -1,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59, 
+    -1,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74, 
+    -1,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89, 
+    -1,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104, 
+    -1, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 
+    -1, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 
+    -1, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 
+    -1, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 
+    -1, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 
+    -1, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 
+    -1, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 
+    -1, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
+]
+for i in range(0, 16 * 15):
+    
+    pos[i] = str(i).ljust(3) + ':' + str(pos[i]).ljust(3)
 
-import numpy as np
-from tqdm import tqdm
-
-from Arena import Arena
-from MCTS import MCTS
-
-log = logging.getLogger(__name__)
-
-
-class Coach():
-    """
-    This class executes the self-play + learning. It uses the functions defined
-    in Game and NeuralNet. args are specified in main.py.
-    """
-
-    def __init__(self, game, nnet, args):
-        self.game = game
-        self.nnet = nnet
-        self.pnet = self.nnet.__class__(self.game)  # the competitor network
-        self.args = args
-        self.mcts = MCTS(self.game, self.nnet, self.args)
-        self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
-        self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
-
-    def executeEpisode(self, game, nnet, args, idx):
-        """
-        This function executes one episode of self-play, starting with player 1.
-        As the game is played, each turn is added as a training example to
-        trainExamples. The game is played till the game ends. After the game
-        ends, the outcome of the game is used to assign values to each example
-        in trainExamples.
-
-        It uses a temp=1 if episodeStep < tempThreshold, and thereafter
-        uses temp=0.
-
-        Returns:
-            trainExamples: a list of examples of the form (canonicalBoard, currPlayer, pi,v)
-                           pi is the MCTS informed policy vector, v is +1 if
-                           the player eventually won the game, else -1.
-        """
-        trainExamples = []
-        board = game.getInitBoard()
-        curPlayer = 1
-        episodeStep = 0
-        mcts_dumy = MCTS(game, nnet, args)
-        while True:
-            episodeStep += 1
-            canonicalBoard = game.getCanonicalForm(board, curPlayer)
-            temp = int(episodeStep < args.tempThreshold)
-
-            pi = mcts.getActionProb(canonicalBoard, temp=temp)
-            sym = game.getSymmetries(canonicalBoard, pi)
-            for b, p in sym:
-                trainExamples.append([b, curPlayer, p, None])
-
-            action = np.random.choice(len(pi), p=pi)
-            board, curPlayer = game.getNextState(board, curPlayer, action)
-
-            r = game.getGameEnded(board, curPlayer)
-
-            if r != 0:
-                return [idx, [(x[0], x[2], r * ((-1) ** (x[1] != curPlayer))) for x in trainExamples]]
-
-    def learn(self):
-        """
-        Performs numIters iterations with numEps episodes of self-play in each
-        iteration. After every iteration, it retrains neural network with
-        examples in trainExamples (which has a maximum length of maxlenofQueue).
-        It then pits the new neural network against the old one and accepts it
-        only if it wins >= updateThreshold fraction of games.
-        """
-
-        for i in range(1, self.args.numIters + 1):
-            # bookkeeping
-            log.info(f'Starting Iter #{i} ...')
-            # examples of the iteration
-            if not self.skipFirstSelfPlay or i > 1:
-                iterationTrainExamples = deque([], maxlen=self.args.maxlenOfQueue)
-
-
-                for _ in tqdm(range(self.args.numEps / 4), desc="Self Play"):
-                    queue = multiprocessing.Queue()
-                    processes = []
-                    game = self.game
-                    nnet = self.nnet
-                    args = self.args
-
-                    p1 = multiprocessing.Process(target=lambda q, arg1, arg2, arg3: q.put(executeEpisode(arg1, arg2, arg3)), args=(queue, game, nnet, args, 1))
-                    processes.append(p1)  
-                    p2 = multiprocessing.Process(target=lambda q, arg1, arg2, arg3: q.put(executeEpisode(arg1, arg2, arg3)), args=(queue, game, nnet, args, 2))
-                    processes.append(p2)
-                    p3 = multiprocessing.Process(target=lambda q, arg1, arg2, arg3: q.put(executeEpisode(arg1, arg2, arg3)), args=(queue, game, nnet, args, 3))
-                    processes.append(p3)
-                    p4 = multiprocessing.Process(target=lambda q, arg1, arg2, arg3: q.put(executeEpisode(arg1, arg2, arg3)), args=(queue, game, nnet, args, 4))
-                    processes.append(p4)
-
-                    for process in processes:
-                        process.start()
-                    
-                    finish_count = 0
-                    while (finish_count < 4):
-                        while not queue.empty():
-                            finish_count += 1
-                            result = queue.get()
-                            if(result[0] == 0):
-                                iterationTrainExamples += result[1]
-                                processes[0].join()
-                            elif(result[0] == 1):
-                                iterationTrainExamples += result[1]
-                                processes[1].join()
-                            elif(result[0] == 2):
-                                iterationTrainExamples += result[1]
-                                processes[2].join()
-                            elif(result[0] == 3):
-                                iterationTrainExamples += result[1]
-                                processes[3].join()
-
-                    #self.mcts = MCTS(self.game, self.nnet, self.args)  # reset search tree
-                    #iterationTrainExamples += self.executeEpisode(self.game, self.nnet, self.args)
-
-                # save the iteration examples to the history 
-                self.trainExamplesHistory.append(iterationTrainExamples)
-
-            if len(self.trainExamplesHistory) > self.args.numItersForTrainExamplesHistory:
-                log.warning(
-                    f"Removing the oldest entry in trainExamples. len(trainExamplesHistory) = {len(self.trainExamplesHistory)}")
-                self.trainExamplesHistory.pop(0)
-            # backup history to a file
-            # NB! the examples were collected using the model from the previous iteration, so (i-1)  
-            self.saveTrainExamples(i - 1)
-
-            # shuffle examples before training
-            trainExamples = []
-            for e in self.trainExamplesHistory:
-                trainExamples.extend(e)
-            shuffle(trainExamples)
-
-            # training new network, keeping a copy of the old one
-            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            pmcts = MCTS(self.game, self.pnet, self.args)
-
-            self.nnet.train(trainExamples)
-            nmcts = MCTS(self.game, self.nnet, self.args)
-
-            log.info('PITTING AGAINST PREVIOUS VERSION')
-            arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                          lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
-            pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
-
-            log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
-            if pwins + nwins == 0 or float(nwins) / (pwins + nwins) < self.args.updateThreshold:
-                log.info('REJECTING NEW MODEL')
-                self.nnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            else:
-                log.info('ACCEPTING NEW MODEL')
-                self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
-                self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
-
-    def getCheckpointFile(self, iteration):
-        return 'checkpoint_' + str(iteration) + '.pth.tar'
-
-    def saveTrainExamples(self, iteration):
-        folder = self.args.checkpoint
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        filename = os.path.join(folder, self.getCheckpointFile(iteration) + ".examples")
-        with open(filename, "wb+") as f:
-            Pickler(f).dump(self.trainExamplesHistory)
-        f.closed
-
-    def loadTrainExamples(self):
-        modelFile = os.path.join(self.args.load_folder_file[0], self.args.load_folder_file[1])
-        examplesFile = modelFile + ".examples"
-        if not os.path.isfile(examplesFile):
-            log.warning(f'File "{examplesFile}" with trainExamples not found!')
-            r = input("Continue? [y|n]")
-            if r != "y":
-                sys.exit()
-        else:
-            log.info("File with trainExamples found. Loading it...")
-            with open(examplesFile, "rb") as f:
-                self.trainExamplesHistory = Unpickler(f).load()
-            log.info('Loading done!')
-
-            # examples based on the model were already collected (loaded)
-            self.skipFirstSelfPlay = True
+for i in range(0, 15):
+    s = ''
+    for j in range(0, 16):
+        s += pos[i * 16 + j] + ','
+    print(s)

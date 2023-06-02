@@ -1,5 +1,5 @@
-from dn5 import DN
-#from dn10 import DN
+#from dn5 import DN
+from dn10 import DN
 import tensorflow as tf
 from tensorflow.keras.callbacks import LearningRateScheduler, LambdaCallback
 from tensorflow.keras.losses import CategoricalCrossentropy, MeanSquaredError, KLDivergence
@@ -40,7 +40,7 @@ args = dotdict({
     'decay' : 0.00003,
     #method
     'method' : 'gumbel',
-    'batch_size' : 2048,
+    'batch_size' : 4096,
     'sampling_epoch_num' : 16,
     'use_sample' : True,
     #swa
@@ -85,9 +85,13 @@ def load_training_data(args):
         original_values = load_data(args.original_data_path + '/value', original_data_size, file_type = args.original_file_type)
 
         #reshape data
+        # original_boards = np.array(original_boards).reshape(len(original_boards), 2, 15, 15)
+        # original_policies = np.array(original_policies).reshape(len(original_policies), 15, 15)
+        # original_auxiliary_policies = np.array(original_auxiliary_policies).reshape(len(original_auxiliary_policies), 15, 15)
+        # original_values = np.array(original_values)
         original_boards = np.array(original_boards).reshape(len(original_boards), 2, 15, 15)
-        original_policies = np.array(original_policies).reshape(len(original_policies), 15, 15)
-        original_auxiliary_policies = np.array(original_auxiliary_policies).reshape(len(original_auxiliary_policies), 15, 15)
+        original_policies = np.array(original_policies).reshape(len(original_policies), 225)
+        original_auxiliary_policies = np.array(original_auxiliary_policies).reshape(len(original_auxiliary_policies), 225)
         original_values = np.array(original_values)
         print('Original train data shape: ')
         print(original_boards.shape, original_policies.shape, original_auxiliary_policies.shape, original_values.shape)
@@ -95,10 +99,11 @@ def load_training_data(args):
         #expand data
         print('Start expand original training data.')
         st = time.time()
-        expand_boards = expand_board_rotated_data(original_boards)
-        expand_policies = expand_policy_rotated_data(original_policies)
-        expand_auxiliary_policies = expand_policy_rotated_data(original_auxiliary_policies)
-        expand_values = expand_value_rotated_data(original_values)
+        expand_boards, expand_policies, expand_auxiliary_policies, expand_values = expand_data(original_boards, original_policies, original_auxiliary_policies, original_values)
+        # expand_boards = expand_board_rotated_data(original_boards)
+        # expand_policies = expand_policy_rotated_data(original_policies)
+        # expand_auxiliary_policies = expand_policy_rotated_data(original_auxiliary_policies)
+        # expand_values = expand_value_rotated_data(original_values)
         ed = time.time()
         print('Expand data completed.\nCost time:', ed - st)
 
@@ -206,7 +211,7 @@ def train_network(args, iter):
     print('Current buffer size:', replay_buffer_current_size)
     if args.use_swa == True:
         his = model.fit(xs, [y_policies, y_next_policies, y_values], shuffle = True, batch_size=args.batch_size, epochs=epoch_num , verbose=1, callbacks=[callback], workers=4)
-    elif args.use_sample == True:
+    elif args.use_sample == True:        
         sampling_num = int(y_values.shape[0] / args.sampling_freq)
         for i in range(args.sampling_epoch_num):
             print('Sampling',i + 1,':')
@@ -275,8 +280,8 @@ if __name__ == '__main__':
     print(iter, 'training start')
     train_network(args, iter)
     # save_init_mode()
-    #del_all_history(args.original_data_path, args.original_file_type)
-    #del_all_history(args.rotated_data_path, args.rotated_file_type)
+    # del_all_history(args.original_data_path, args.original_file_type)
+    # del_all_history(args.rotated_data_path, args.rotated_file_type)
     ed = time.time()
     print('Training cost time:',ed - st)
 

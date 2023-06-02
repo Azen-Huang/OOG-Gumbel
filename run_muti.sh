@@ -1,4 +1,4 @@
-for ((i = 82; i <= 200; i = i + 1))
+for ((i = 1; i <= 500; i = i + 1))
 do
     echo "iter: $i Start"
     startTime_s=$(date +%s)
@@ -19,10 +19,9 @@ do
     
     python -u "./train_network.py" $((i))
 
-    if ((i % 10 == 0 ))
+    if ((i % 25 == 0 ))
     then
-        #g++ -march=native KataGo.cc -g -ltensorflow -fopenmp -O2 -o KataGo && "./"KataGo --evaluation $i | tee output_$((i))_vs_$((i - 10)).log
-        g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --evaluation $i 0 | tee output_$((i))_vs_$((i - 10)).log
+        g++ -march=native Gumbel.cc -g -ltensorflow -fopenmp -O2 -o Gumbel && "./"Gumbel --evaluation $i 0 | tee ./log/output_$((i))_vs_$((i - 25)).log
         python -u "./copy_folder.py" -1
     fi
 done

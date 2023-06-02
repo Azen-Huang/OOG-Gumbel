@@ -251,3 +251,41 @@ def copy_dir(iter, path = './c_model'):
                     shutil.copy(source, destination)
                     #print('copied', file_name)
         print(path, "copy model complete!")
+
+def getSymmetries(my_board, opp_board, pi, nxt_pi, val):
+    pi_board = np.reshape(pi[:], (15, 15))
+    nxt_pi_board = np.reshape(nxt_pi[:], (15, 15))
+    l = []
+    for i in range(1, 5):
+        for j in [True, False]:
+            newmy = np.rot90(my_board, i)
+            newopp = np.rot90(opp_board, i)
+            newPi = np.rot90(pi_board, i)
+            newNxtPi = np.rot90(nxt_pi_board, i)
+            if j:
+                newmy = np.fliplr(newmy)
+                newopp = np.fliplr(newopp)
+                newPi = np.fliplr(newPi)
+                newNxtPi = np.fliplr(newNxtPi)
+            l += [(newmy, newopp, list(newPi.ravel()), list(newNxtPi.ravel()), val)]
+    return l
+
+def expand_data(boards, polices, auxiliary_policies, values):
+    expanded_boards = []
+    expanded_polices = []
+    expanded_auxiliary_policies = []
+    expanded_values = []
+    for board, policy, auxiliary_policy, value in zip(boards, polices, auxiliary_policies, values):
+        expanded_data = getSymmetries(board[0], board[1], policy, auxiliary_policy, value)
+        for newmy, newopp, newPi, newNxtPi, val in expanded_data:
+            expanded_boards += [[newmy, newopp]]
+            expanded_polices += [newPi]
+            expanded_auxiliary_policies += [newNxtPi]
+            expanded_values += [val]
+    expanded_boards = np.array(expanded_boards).transpose(0,2,3,1).astype('float32')
+    expanded_polices = np.array(expanded_polices).astype('float32')
+    expanded_auxiliary_policies = np.array(expanded_auxiliary_policies).astype('float32')
+    expanded_values = np.array(expanded_values).astype('float32')
+    # print(np.shape(expanded_values))
+    # print(np.shape(expanded_boards))
+    return expanded_boards, expanded_polices, expanded_auxiliary_policies, expanded_values

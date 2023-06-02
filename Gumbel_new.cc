@@ -40,16 +40,16 @@ using namespace std;
 bool use_mixed_value = true;
 bool use_table = true;
 float GUMBEL_PENALTY = 1.0;
-int MAX_CONSIDERED_NUM = 64; //Top-k-Gumbel -> 16 32 80 128
+int MAX_CONSIDERED_NUM = 8; //Top-k-Gumbel -> 16 32 80 128
 int GUMBEL_SIMPLE = 1; //24:50 95:5
 /////////////////////////////////////////
-int EVALUATION_COUNT = 200; // expand node count
+int EVALUATION_COUNT = 8; // expand node count
 int REPLAY_BUFFER_SIZE = 4096;//4096 2048
 int EVALUATION_PLAY_COUNT = 40;
 bool HUMAN_PLAY = false;
 int ITER;
 /////////////////////////////
-int ProcessCount = 8;
+int ProcessCount = 4;
 int ProcessID = 0;
 ////////////////////////////////
 vector<int> common_pos_to_bitboard_pos = {
@@ -126,7 +126,7 @@ void print_1d_vec(T& vec){
 }
 
 template <typename T>
-void print_board(T& vec, char c){
+void print_board(T& vec, char c, float val = 0){
     cout << "   ";
     for(char i = 'A'; i <= 'O'; ++i){
         cout << i << " ";
@@ -139,7 +139,7 @@ void print_board(T& vec, char c){
     cout << endl;
     cout << 15 << "|";
     for(int i = 1; i <= 225; ++i){
-        if(vec[i - 1] != 0){
+        if(vec[i - 1] != val){
             cout << c << " ";
         }
         else{
@@ -391,11 +391,13 @@ float Game::terminal_value(int to_play){
 vector<uint64_t> Game::legal_actions(BitBoard my, BitBoard opp, BitBoard moves, BitBoard myTzone, BitBoard oppTzone){
     vector<uint64_t> actions;
     if(SIZE == 0){
-        for(int i = 18; i <= 24; ++i){
-        //for(int i = 1; i <= 24; ++i){
-        //    if(i > 8 && i < 17) continue;
-            actions.push_back(i);
-        }
+        actions = {19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+                34, 50, 66, 82, 98, 114, 130, 146, 162, 178, 194,
+                46, 62, 78, 94, 110, 126, 142, 158, 174, 190, 206,
+                211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221};
+        // for(int i = 18; i <= 24; ++i){
+        //     actions.push_back(i);
+        // }
         return actions;
     }
 
@@ -483,12 +485,19 @@ void Game::apply(uint64_t pos){
 }
 
 void Game::store_search_statistics(Node* root){
-    float max_q_value = -100000.0;
-    vector<float> child_logits_add_completed_q_value(225, 0.0);
-    max_q_value = root->children[0]->qvalue(); // -1 * root->qvalue();
+    float max_q_value = root->children[0]->qvalue(); // -1 * root->qvalue();
+    float min_logit = -std::numeric_limits<float>::max();
+    vector<float> child_logits_add_completed_q_value(225, min_logit);
     for(auto& child: root->children){
         child_logits_add_completed_q_value[bitboard_pos_to_common_pos[child->action]] = child->prior + child->complete_qvalue;
     } 
+    float max_logit = *max_element(child_logits_add_completed_q_value.begin(), child_logits_add_completed_q_value.end());
+    for(auto& child: root->children){
+        if (child_logits_add_completed_q_value[bitboard_pos_to_common_pos[child->action]] != min_logit) {
+            child_logits_add_completed_q_value[bitboard_pos_to_common_pos[child->action]] -= max_logit;
+        }
+    } 
+    // print_1d_vec(child_logits_add_completed_q_value);
     //child_logits_add_completed_q_value = softmax(child_logits_add_completed_q_value);
     child_values.push_back(max_q_value);
     //cout << max_q_value << endl;
@@ -559,6 +568,7 @@ vector<BitBoard> Game::make_bitboard(int state_index){
 vector<vector<int>> Game::make_image(int state_index){
     vector<int> black(225, 0);
     vector<int> white(225, 0);
+    // new gumbel
     for(int i = 0; i < state_index; ++i){
         int pos = history[i];
         if(i % 2 == 0)
@@ -663,6 +673,11 @@ void Game::print(){
 }
 
 float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
+    // game->print();
+    // node->my.print();
+    // cout << endl;
+    // node->opp.print();
+    // cout << endl << endl;
     Network network_output = predict(node->my, node->opp, model);
     //print_1d_vec(network_output.policies);
     node->to_play = game->to_play();
@@ -689,6 +704,7 @@ float expand_node(Node* node, Game* game, cppflow::model& model){ // ok
     float max_logit = *max_element(network_output.policies.begin(), network_output.policies.end());
     float min_logit = -std::numeric_limits<float>::max();
     vector<float> policies(225, min_logit);
+
     for(auto& pos: legal_actions){
          uint64_t legal_move = bitboard_pos_to_common_pos[pos];
          policies[legal_move] = network_output.policies[legal_move] - max_logit;
@@ -756,7 +772,7 @@ float compute_mixed_value(const float& raw_value,const vector<float>& qvalues,co
 
     //prior_probs = jnp.maximum(jnp.finfo(prior_probs.dtype).tiny, prior_probs)
     vector<float> none_zero_prior_probs(prior_probs.size());
-    float tiny = std::numeric_limits<float>::min();
+    float tiny = -std::numeric_limits<float>::max();
     float sum_probs = 0.0;
     for (int i = 0; i < prior_probs.size(); ++i) {
         none_zero_prior_probs[i] = max(tiny, prior_probs[i]);
@@ -784,7 +800,7 @@ vector<float>  qtransform(Node* node){
     float value_scale = 0.1;
     float maxvisit_init = 50.0;
     float epsilon = 1e-8;
-    
+    float min_prior = -std::numeric_limits<float>::max();
     float raw_value = node->raw_value;
     vector<float> qvalues(n);
     vector<float> visited_counts(n); // children visited count
@@ -1093,44 +1109,30 @@ void self_play(cppflow::model& model){
             if(board_history.size() == REPLAY_BUFFER_SIZE) break;
             vector<int> board_info(2*15*15);
             vector<vector<int>> board = game->make_image(i);
-            if(i % 2 == 0){
-                // print_board(board[0], 'x');
-                // print_board(board[1], 'o');
+            if(i % 2 == 0){ // new gumbel
+                // print_board(board[0], 'o');
+                // print_board(board[1], 'x');
                 std::copy(board[0].begin(), board[0].end(), board_info.begin());
                 std::copy(board[1].begin(), board[1].end(), board_info.begin() + board[0].size());
             }
             else{
-                // print_board(board[1], 'o');
-                // print_board(board[0], 'x');
+                // print_board(board[1], 'x');
+                // print_board(board[0], 'o');
                 std::copy(board[1].begin(), board[1].end(), board_info.begin());
                 std::copy(board[0].begin(), board[0].end(), board_info.begin() + board[1].size());
             }
             board_history.push_back(board_info);        
 
             policies_history.push_back(game->child_polices[i]);
-            // print_board(game->child_polices[i], 'p');
+            //float min_logit = -std::numeric_limits<float>::max();
+            //print_board(game->child_polices[i], 'p', min_logit);
+            // print_1d_vec(game->child_polices[i]);
             float value = i % 2 == winner ? 1.0 : -1.0;//！!！!
             #ifdef DEBUG
                 cout << value << " " << game->child_values[i] << endl;
             #endif
             if (game->SIZE >= 254) value_history.push_back(0);
             else value_history.push_back((value + game->child_values[i]) / 2.0);
-            // cout << value << " " << game->child_values[i] << " " << (value + game->child_values[i]) / 2.0 << endl;
-            //value_history.push_back(value);
-            //value_history.push_back(value);
-            // if (ITER <= 25) {
-            //     value_history.push_back(value);
-            // }
-            // else {
-            //     value_history.push_back((value + game->child_values[i]) / 2.0);
-            // }
-            
-            // if (ITER <= 50) {
-            //     value_history.push_back((value + game->child_values[i]) / 2.0);
-            // }
-            // else {
-            //     value_history.push_back(game->child_values[i]);
-            // }
 
             //katago
             if(i + 1 == game->SIZE){
@@ -1327,8 +1329,9 @@ int main(int argc, char* argv[]){
         else if (ITER <= 80) GUMBEL_SIMPLE = 30;
         else GUMBEL_SIMPLE = 10;
         cout << "Gumble simple: " << GUMBEL_SIMPLE << endl;
-
-        EVALUATION_COUNT = 200;
+        
+        MAX_CONSIDERED_NUM = 32;
+        EVALUATION_COUNT = 100;
         cppflow::model p_model("./p_model");
         evaluation(model, p_model);
 
